@@ -1,12 +1,23 @@
 #!/bin/bash
 
-. .rtmcfg
+. ~/.rtmcfg
 
 #api_key api_secret
 api_url="https://api.rememberthemilk.com/services/rest/"
 format="json"
 standard_args="api_key=$api_key&format=$format&auth_token=$auth_token" #
 wget_cmd="wget -q -O -"
+
+#set options
+for i in "$@"
+do
+case $i in
+    -l=*|--list=*)
+        list_name=$(echo "${i#*=}")
+    shift
+    ;;
+esac
+done
 
 #sign requests
 get_sig ()
@@ -30,7 +41,6 @@ auth_app () {
     sig=$(get_sig "$args")
     surf "$auth_url?$args&api_sig=$sig"
 }
-#H@l0b!umL!0np@ll
 get_token () {
     method="rtm.auth.getToken"
     args="method=$method&$standard_args&frob=$frob"
@@ -62,7 +72,7 @@ get_timeline () {
 }
 
 #api list methods
-. .rtmcfg
+. ~/.rtmcfg
 
 #lists
 lists_getList () {
@@ -168,9 +178,34 @@ tasks_complete () {
         echo "something bad hapon"
     fi
 }
+
+tasks_add () {
+    method="rtm.tasks.add"
+    l_id=$(echo "$list_name" | xargs -I{} grep {} /tmp/list-vars.txt | cut -d'=' -f2)
+    args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&name=$1&parse=1"
+    sig=$(get_sig "$args")
+    check=$($wget_cmd "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .stat') 
+    if [ $check == "ok" ]
+    then
+        echo "Task added!"
+    else
+        echo "something bad hapon"
+    fi
+}
 #lists_getList
 #tasks_getList
 #index_tasks
 #index_csv /tmp/tasks.csv
 #display_tasks /tmp/tasks.csv
 #tasks_complete $1
+#task_add "$2"
+
+for i in "$@"
+do
+case $i in
+    add)
+        tasks_add "$2"
+    shift
+    ;;
+esac
+done
