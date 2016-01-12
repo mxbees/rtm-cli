@@ -16,19 +16,6 @@ standard_args="api_key=$api_key&format=$format&auth_token=$auth_token"
 #I prefer wget for no principled reason.
 wget_cmd="wget -q -O -"
 
-#set options
-#i could do tags... and i do need to figure that out...
-#for now this will grab the list to add your task too.
-for i in "$@"
-do
-case $i in
-    -l=*|--list=*)
-        list_name=$(echo "${i#*=}")
-    shift
-    ;;
-esac
-done
-
 #sign requests, pretty much all api calls need to be signed
 #https://www.rememberthemilk.com/services/api/authentication.rtm
 get_sig ()
@@ -171,7 +158,7 @@ index_csv () {
 d=1
     while read line
     do
-        echo "$line" | sed "s/^/item\[$d\]=\"/g" | sed 's/$/"/g' >> /tmp/indexed_tasks.csv
+        echo "$line" | sed "s/^/item\[$d\]=\"/g" | sed "s/\"$//g" >> /tmp/indexed_tasks.csv
     d=$((d+1))
     done < $1
 }
@@ -180,15 +167,27 @@ d=1
 display_tasks () {
 c=1
     index_csv $1
-    while read line
+    while read x
     do
-        pri=$(echo "$line" | cut -d',' -f1 | sed 's/N/\ /g')
+        line=$(echo "$x" | sed "s/item\[$c\]=\"//g")
+        pri=$(echo "$line" | cut -d',' -f1)
         due=$(echo "$line" | cut -d',' -f2)
         due_date=$(date --date="$due" +'%b %d %R' | sed 's/00:00//g')
         name=$(echo "$line" | cut -d',' -f6)
         list=$(echo "$line" | cut -d',' -f5)
         tag==$(echo "$line" | cut -d',' -f7)
-        printf "$c: $name $due_date #$list\n"
+        if [ $pri == "1" ]
+        then
+            echo "$(tput setaf 7)$c: $(tput setaf 9) $(tput setaf 1)$name$(tput setaf 9) $(tput setaf 6)$due_date$(tput setaf 9) $(tput setaf 7)#$list$(tput setaf 9)"
+        elif [ $pri == "2" ]
+        then
+            echo "$(tput setaf 7)$c: $(tput setaf 9) $(tput setaf 2)$name$(tput setaf 9) $(tput setaf 6)$due_date$(tput setaf 9) $(tput setaf 7)#$list$(tput setaf 9)"
+        elif [ $pri == "3" ]
+        then
+            echo "$(tput setaf 7)$c: $(tput setaf 9) $(tput setaf 5)$name$(tput setaf 9) $(tput setaf 6)$due_date$(tput setaf 9) $(tput setaf 7)#$list$(tput setaf 9)"
+        else
+            echo "$(tput setaf 7)$c: $(tput setaf 9) $name $(tput setaf 6)$due_date$(tput setaf 9) $(tput setaf 7)#$list$(tput setaf 9)"
+        fi
     c=$((c+1))
     done < /tmp/indexed_tasks.csv
 }
@@ -205,28 +204,44 @@ tasks_complete () {
         args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id"
     sig=$(get_sig "$args")
     check=$($wget_cmd "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .stat')
-    if [ $check == "ok" ]
-    then
-        echo "Task complete!"
-    else
-        echo "something bad hapon"
-    fi
+    check $check
 }
 #Add a task. For the sake of... simplicity, its usually
 #best to always add to a specific list. Something wonky
 #happens atm if there are tasks in the Inbox.
 #https://www.rememberthemilk.com/services/api/methods/rtm.tasks.add.rtm
+tasks_setPriority () {
+    smethod="rtm.tasks.setPriority"
+    p=$1
+    data=$2
+    ts_id=$(echo "$data" | jq -r '.rsp | .list | .taskseries | .id')
+    t_id=$(echo "$data" | jq -r '.rsp | .list | .taskseries | .task | .id')
+    bargs="method=$smethod&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id&priority=$p"
+    sig=$(get_sig "$bargs")
+    check=$( $wget_cmd "$api_url?$bargs&api_sig=$sig" | jq -r '.rsp | .stat')
+    check $check
+}
 tasks_add () {
     method="rtm.tasks.add"
-    l_id=$(echo "$list_name" | xargs -I{} grep {} /tmp/list-vars.txt | cut -d'=' -f2)
-    args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&name=$1&parse=1"
+    p=$(echo $1 | sed 's/\ .*//g' | sed 's/!//g')
+    name=$(echo "$1" | sed 's/^![1-9]\ //g' | sed 's/\ #[a-z]*$//g')
+    l_id=$(echo "$1" | sed 's/^.*#//g' | xargs -I{} grep {} /tmp/list-vars.txt | cut -d'=' -f2)
+    args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&name=$name&parse=1"
     sig=$(get_sig "$args")
-    check=$($wget_cmd "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .stat') 
-    if [ $check == "ok" ]
+    response=$($wget_cmd "$api_url?$args&api_sig=$sig")
+    check=$(echo "$response" | jq -r '.rsp | .stat')
+    check $check
+    if [ $p -eq 1 -o $p -eq 2 -o $p -eq 3 ]
     then
-        echo "Task added!"
-    else
-        echo "something bad hapon"
+        tasks_setPriority "$p" "$response"
+    fi
+}
+
+check () {
+    if [ $1 != "ok" ]
+    then
+        echo "what hapon"
+        exit 1
     fi
 }
 
@@ -236,17 +251,17 @@ tasks_add () {
 for i in "$@"
 do
 case $i in
-    list)
+    list|ls)
         sync_tasks
         sort_priority
         display_tasks /tmp/by-priority.csv
     shift
     ;;
-    add)
+    add|a)
         tasks_add "$2"
     shift
     ;;
-    complete)
+    complete|c)
         tasks_complete "$2"
     shift
     ;;
@@ -259,7 +274,7 @@ case $i in
         . ~/.rtmcfg
     shift
     ;;
-    -d)
+    date|d)
         sort_date
         display_tasks /tmp/by-date.csv
     shift
