@@ -75,9 +75,9 @@ get_timeline () {
     args="method=$method&$standard_args"
     sig=$(get_sig "$args")
     timeline=$($wget_cmd "$api_url?$args&api_sig=$sig" | jq -r '.rsp|.timeline')
-    echo "timeline=$timeline" >> .rtmcfg
+    echo "$timeline"
 }
-
+timeline=$(get_timeline)
 #Gets a list of lists.
 #https://www.rememberthemilk.com/services/api/methods/rtm.lists.getList.rtm
 lists_getList () {
@@ -137,9 +137,9 @@ c=0
 }
 #Bundle the above four steps for one sync.
 sync_tasks () {
-    lists_getList
+    #lists_getList
     index_lists
-    tasks_getList
+    #tasks_getList
     index_tasks
 }
 #this is the default sorting order. First by priority,
@@ -165,6 +165,15 @@ d=1
 #this displays your tasks to stdout looking reasonably,
 #I think. I want to add colour.
 display_tasks () {
+bold=$(tput bold)
+normal=$(tput sgr0)
+red=$(tput setaf 1)
+green=$(tput setaf 2)
+orange=$(tput setaf 3)
+pink=$(tput setaf 5)
+blue=$(tput setaf 6)
+white=$(tput setaf 7)
+default=$(tput setaf 9)
 c=1
     index_csv $1
     while read x
@@ -178,15 +187,15 @@ c=1
         tag==$(echo "$line" | cut -d',' -f7)
         if [ $pri == "1" ]
         then
-            echo "$(tput setaf 7)$c: $(tput setaf 9) $(tput setaf 1)$name$(tput setaf 9) $(tput setaf 6)$due_date$(tput setaf 9) $(tput setaf 7)#$list$(tput setaf 9)"
+            echo "${white}$c: ${default} ${red}${bold}$name${default}${normal} ${blue}$due_date${default} ${white}#$list${default}"
         elif [ $pri == "2" ]
         then
-            echo "$(tput setaf 7)$c: $(tput setaf 9) $(tput setaf 2)$name$(tput setaf 9) $(tput setaf 6)$due_date$(tput setaf 9) $(tput setaf 7)#$list$(tput setaf 9)"
+            echo "${white}$c: ${default} ${orange}${bold}$name${default}${normal} ${blue}$due_date${default} ${white}#$list${default}"
         elif [ $pri == "3" ]
         then
-            echo "$(tput setaf 7)$c: $(tput setaf 9) $(tput setaf 5)$name$(tput setaf 9) $(tput setaf 6)$due_date$(tput setaf 9) $(tput setaf 7)#$list$(tput setaf 9)"
+            echo "${white}$c: ${default} ${pink}${bold}$name${default}${normal} ${blue}$due_date${default} ${white}#$list${default}"
         else
-            echo "$(tput setaf 7)$c: $(tput setaf 9) $name $(tput setaf 6)$due_date$(tput setaf 9) $(tput setaf 7)#$list$(tput setaf 9)"
+            echo "${white}$c: ${default} ${green}$name${default} ${blue}$due_date${default} ${white}#$list${default}"
         fi
     c=$((c+1))
     done < /tmp/indexed_tasks.csv
@@ -218,7 +227,8 @@ tasks_setPriority () {
     t_id=$(echo "$data" | jq -r '.rsp | .list | .taskseries | .task | .id')
     bargs="method=$smethod&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id&priority=$p"
     sig=$(get_sig "$bargs")
-    check=$( $wget_cmd "$api_url?$bargs&api_sig=$sig" | jq -r '.rsp | .stat')
+    response=$($wget_cmd "$api_url?$bargs&api_sig=$sig")
+    check=$( echo "$response" | jq -r '.rsp | .stat')
     check $check
 }
 tasks_add () {
@@ -231,7 +241,7 @@ tasks_add () {
     response=$($wget_cmd "$api_url?$args&api_sig=$sig")
     check=$(echo "$response" | jq -r '.rsp | .stat')
     check $check
-    if [ $p -eq 1 -o $p -eq 2 -o $p -eq 3 ]
+    if [ $p == "1" -o $p == "2" -o $p == "3" ]
     then
         tasks_setPriority "$p" "$response"
     fi
@@ -259,10 +269,16 @@ case $i in
     ;;
     add|a)
         tasks_add "$2"
+        sync_tasks
+        sort_priority
+        display_tasks /tmp/by-priority.csv
     shift
     ;;
     complete|c)
         tasks_complete "$2"
+        sync_tasks
+        sort_priority
+        display_tasks /tmp/by-priority.csv
     shift
     ;;
     sync)
