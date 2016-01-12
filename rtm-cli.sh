@@ -111,16 +111,21 @@ tasks_getList () {
 }
 #This grabs the useful data from the json file and
 #converts it to a csv.
-index_tasks () {
-> /tmp/tasks.csv
-c=0
-    x=$(jq '.rsp|.tasks|.list|length' /tmp/tasks.json)
-    while [ $c -lt $x ]
+index_oneTask () {
+    list=$(jq -r ".rsp|.tasks|.list[$c]|.id" /tmp/tasks.json| xargs -I{} grep {} /tmp/list-vars.txt | cut -d'=' -f1 )
+    series_id=$(jq -r ".rsp|.tasks|.list[$c] |.taskseries|.id" /tmp/tasks.json)
+    task_id=$(jq -r ".rsp|.tasks|.list[$c] |.taskseries| .task | .id" /tmp/tasks.json)
+    name=$(jq -r ".rsp|.tasks|.list[$c] |.taskseries|.name" /tmp/tasks.json)
+    priority=$(jq -r ".rsp|.tasks|.list[$c] |.taskseries|.task|.priority" /tmp/tasks.json)
+    due=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries |.task|.due" /tmp/tasks.json)
+    due_date=$(date --date="$due" +'%D %H:%M')
+    tags=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries |.tags[]|.tag" /tmp/tasks.json)
+    echo "$priority,$due_date,$series_id,$task_id,$list,$name" >> /tmp/tasks.csv
+}
+
+index_zeroMore () {
+    while [ $c1 -lt $y ]
     do
-        y=$(jq ".rsp|.tasks|.list[$c]|.taskseries|length" /tmp/tasks.json)
-        c1=0
-        while [ $c1 -lt $y ]
-        do
         list=$(jq -r ".rsp|.tasks|.list[$c]|.id" /tmp/tasks.json| xargs -I{} grep {} /tmp/list-vars.txt | cut -d'=' -f1 )
         series_id=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries[$c1]|.id" /tmp/tasks.json)
         task_id=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries[$c1]| .task | .id" /tmp/tasks.json)
@@ -130,16 +135,34 @@ c=0
         due_date=$(date --date="$due" +'%D %H:%M')
         tags=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries[$c1]|.tags[]|.tag" /tmp/tasks.json)
         echo "$priority,$due_date,$series_id,$task_id,$list,$name" >> /tmp/tasks.csv
-        c1=$((c1+1))
-        done
+    c1=$((c1+1))
+    done
+}
+index_tasks () {
+> /tmp/tasks.csv
+c=0
+    x=$(jq '.rsp|.tasks|.list|length' /tmp/tasks.json)
+    while [ $c -lt $x ]
+    do
+        y=$(jq ".rsp|.tasks|.list[$c]|.taskseries|length" /tmp/tasks.json)
+        z=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries|type" /tmp/tasks.json)
+        c1=0
+        if [ $z == "object" ]
+        then
+            index_oneTask
+        fi
+        if [ $z == "array" ]
+        then
+            index_zeroMore
+        fi
     c=$((c+1))
     done
 }
 #Bundle the above four steps for one sync.
 sync_tasks () {
-    #lists_getList
+    lists_getList
     index_lists
-    #tasks_getList
+    tasks_getList
     index_tasks
 }
 #this is the default sorting order. First by priority,
