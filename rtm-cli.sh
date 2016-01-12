@@ -230,10 +230,10 @@ c=1
 tasks_complete () {
     method="rtm.tasks.complete"
     x=$(grep "item\[$1\]" /tmp/indexed_tasks.csv | sed "s/item\[$1\]=//g" )
-        l_id=$(echo "$x" | cut -d',' -f5 | xargs -I{} grep {} /tmp/list-vars.txt | cut -d'=' -f2)
-        ts_id=$(echo "$x" | cut -d',' -f3)
-        t_id=$(echo "$x" | cut -d',' -f4)
-        args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id"
+    l_id=$(echo "$x" | cut -d',' -f5 | xargs -I{} grep {} /tmp/list-vars.txt | cut -d'=' -f2)
+    ts_id=$(echo "$x" | cut -d',' -f3)
+    t_id=$(echo "$x" | cut -d',' -f4)
+    args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id"
     sig=$(get_sig "$args")
     check=$($wget_cmd "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .stat')
     check $check
@@ -270,6 +270,18 @@ tasks_add () {
     fi
 }
 
+tasks_postpone () {
+    method="rtm.tasks.postpone"
+    x=$(grep "item\[$1\]" /tmp/indexed_tasks.csv | sed "s/item\[$1\]=//g" )
+    l_id=$(echo "$x" | cut -d',' -f5 | xargs -I{} grep {} /tmp/list-vars.txt | cut -d'=' -f2)
+    ts_id=$(echo "$x" | cut -d',' -f3)
+    t_id=$(echo "$x" | cut -d',' -f4)
+    args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id"
+    sig=$(get_sig "$args")
+    check=$($wget_cmd "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .stat')
+    check $check
+}
+
 check () {
     if [ $1 != "ok" ]
     then
@@ -299,6 +311,13 @@ case $i in
     ;;
     complete|c)
         tasks_complete "$2"
+        sync_tasks
+        sort_priority
+        display_tasks /tmp/by-priority.csv
+    shift
+    ;;
+    postpone|p)
+        tasks_postpone $2
         sync_tasks
         sort_priority
         display_tasks /tmp/by-priority.csv
