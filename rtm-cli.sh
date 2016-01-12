@@ -285,7 +285,7 @@ tasks_postpone () {
 check () {
     if [ $1 != "ok" ]
     then
-        echo "what hapon"
+        echo "$response"
         exit 1
     fi
 }
