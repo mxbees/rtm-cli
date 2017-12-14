@@ -66,7 +66,7 @@ check_token () {
     method="rtm.auth.checkToken"
     args="method=$method&$standard_args"
     sig=$(get_sig "$args")
-    $wget_cmd "$api_url?$args&api_sig=$sig" | jq '.rsp | .stat'
+    $wget_cmd "$api_url?$args&api_sig=$sig" #| jq '.rsp | .stat'
 }
 #Grabs the timeline. Need for all write requests.
 #https://www.rememberthemilk.com/services/api/timelines.rtm
@@ -335,6 +335,10 @@ case $i in
     date|d)
         sort_date
         display_tasks /tmp/by-date.csv
+    shift
+    ;;
+    check)
+      check_token
     shift
     ;;
 esac
