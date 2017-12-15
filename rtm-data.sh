@@ -1,5 +1,10 @@
 #!/bin/bash
 
+_lists () {
+  read $task_lists
+  echo "$task_lists" | ./lib/json/JSON.sh -b 
+}
+
 #This grabs the useful data from the json file and
 #converts it to a csv.
 index_oneTask () {
