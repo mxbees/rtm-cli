@@ -12,7 +12,10 @@ _lists () {
 }
 
 _tasks () {
-  
+  tmp1=data/tmp1.txt #$(mktemp)
+  tmp2=$(mktemp)
+  tmp3=$(mktemp)
+  ./json.sh < $tasks_json | tail -n +2 > $tmp1
 }
 
 #This grabs the useful data from the json file and

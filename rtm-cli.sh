@@ -2,7 +2,9 @@
 . rtm-api.sh
 . rtm-data.sh
 
-list_json=$(mktemp)
+#list_json=$(mktemp)
+list_json=data/list_of_lists.json
+tasks_json=data/all-tasks.json
 #tasks_json=$(mktemp)
 
 #does the actions below. i should add a 'help' section.
