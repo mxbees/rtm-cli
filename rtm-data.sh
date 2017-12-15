@@ -2,7 +2,7 @@
 
 _lists () {
   dump=$(mktemp)
-  list_id=$(./json.sh < data/list_of_lists.json | tail -n +2 | grep -e  '/"rsp","lists","list",[0-9],"id"/')#> $dump
+  list_id=$(./json.sh < data/list_of_lists.json | tail -n +2 | grep -e  '/"rsp","lists","list",[0-9],"id"/') #> $dump
   echo "$list_id" 
   #grep -e '"rsp","lists","list",[0-9],"name"'
 }
