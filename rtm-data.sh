@@ -3,7 +3,8 @@
 _lists () {
   dump=$(mktemp)
   #$(cat $why/list_of_lists.json | ./lib/json/JSON.sh -b) > huh.txt 
-  ./json.sh < data/list_of_lists.json | tail -n +2
+  ./json.sh < data/list_of_lists.json | tail -n +2 > $dump
+  split -l 8 -a 5 $dump rtmtasks
 }
 
 #This grabs the useful data from the json file and
