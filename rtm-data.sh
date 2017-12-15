@@ -4,7 +4,7 @@ _lists () {
   tmp1=$(mktemp)
   tmp2=$(mktemp)
   tmp3=$(mktemp)
-  ./json.sh < data/list_of_lists.json | tail -n +2 > $tmp1
+  ./json.sh < $list_of_lists | tail -n +2 > $tmp1
   list_id=$(grep -e  '"rsp","lists","list",[0-9],"id"' $tmp1 | cut -f2 | sed 's/"//g' > $tmp2) 
   list_name=$(grep -e '"rsp","lists","list",[0-9],"name"' $tmp1 | cut -f2 | sed 's/"//g' > $tmp3)
   paste $tmp2 $tmp3 > data/lists.tsv
