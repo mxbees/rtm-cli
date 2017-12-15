@@ -4,7 +4,7 @@
 #api_secret="your secret here"
 #You'll need this for all of the script.
 . ~/.rtmcfg
-data_dir='/home/nina/Documents/code/halp_me_bot/data'
+
 api_url="https://api.rememberthemilk.com/services/rest/"
 #I find json easier to work with, but you can remove it
 #from here and in the $standard_args variable and you'll 
