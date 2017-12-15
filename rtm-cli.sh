@@ -2,6 +2,9 @@
 . rtm-api.sh
 . rtm-data.sh
 
+list_json=$(mktemp)
+#tasks_json=$(mktemp)
+
 #does the actions below. i should add a 'help' section.
 #Note that it syncs your tasks everytime you add or 
 #complete one.
@@ -9,12 +12,13 @@ for i in "$@"
 do
 case $i in
   list|ls)
-    tasks_getList
-    #sync_tasks
-    #sort_priority
-    #display_tasks /tmp/by-priority.csv
-  shift
-  ;;
+    #tasks_getList > $tasks_json
+    _tasks 
+  shift;;  
+  lsl)
+    lists_getList > $list_json
+    _lists
+  shift;;
   add|a)
     tasks_add "$2"
      # sync_tasks

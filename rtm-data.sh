@@ -11,6 +11,10 @@ _lists () {
   
 }
 
+_tasks () {
+  
+}
+
 #This grabs the useful data from the json file and
 #converts it to a csv.
 index_oneTask () {
