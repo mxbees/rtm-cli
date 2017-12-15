@@ -1,7 +1,9 @@
 #!/bin/bash
 
 _lists () {
-  cat $why/list_of_lists.json | ./lib/json/JSON.sh -b 
+  dump=$(mktemp)
+  #$(cat $why/list_of_lists.json | ./lib/json/JSON.sh -b) > huh.txt 
+  ./lib/json/JSON.sh < $why/list_of_lists.json > huh.txt
 }
 
 #This grabs the useful data from the json file and

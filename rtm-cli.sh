@@ -1,5 +1,6 @@
 #!/bin/bash
-
+. rtm-api.sh
+. rtm-data.sh
 
 #does the actions below. i should add a 'help' section.
 #Note that it syncs your tasks everytime you add or 
@@ -8,9 +9,10 @@ for i in "$@"
 do
 case $i in
   list|ls)
-    sync_tasks
-    sort_priority
-    display_tasks /tmp/by-priority.csv
+    tasks_getList
+    #sync_tasks
+    #sort_priority
+    #display_tasks /tmp/by-priority.csv
   shift
   ;;
   add|a)

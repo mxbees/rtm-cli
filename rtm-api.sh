@@ -110,16 +110,16 @@ c=0
 #https://www.rememberthemilk.com/services/api/methods/rtm.tasks.getList.rtm
 tasks_getList () {
   method="rtm.tasks.getList"
-  last_sync=$(cat $data_dir/last_sync.txt)
-  
-  while read line; do
-    list_id=$(echo $line | cut -d',' -f1)
-    args="method=$method&$standard_args&filter=status:incomplete&list_id=$list_id&last_sync=$last_sync"
+ # last_sync=$(cat $data_dir/last_sync.txt)
+  args="method=$method&$standard_args&filter=status:incomplete"
+  #while read line; do
+  #  list_id=$(echo $line | cut -d',' -f1)
+  #  args="method=$method&$standard_args&filter=status:incomplete&list_id=$list_id&last_sync=$last_sync"
     sig=$(get_sig "$args")
     curl -s "$api_url?$args&api_sig=$sig"
-  done < $data_dir/rtm_lists.csv
+  #done < $data_dir/rtm_lists.csv
   
-  date -Iseconds > $data_dir/last_sync.txt
+ # date -Iseconds > $data_dir/last_sync.txt
 }
 
 #Bundle the above four steps for one sync.
