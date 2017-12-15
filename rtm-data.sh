@@ -1,7 +1,7 @@
 #!/bin/bash
 
 _lists () {
-  cat $data_dir/list_of_lists.json | ./lib/json/JSON.sh -b 
+  cat $why/list_of_lists.json | ./lib/json/JSON.sh -b 
 }
 
 #This grabs the useful data from the json file and
