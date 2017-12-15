@@ -1,8 +1,7 @@
 #!/bin/bash
 
 _lists () {
-  read $task_lists
-  echo "$task_lists" | ./lib/json/JSON.sh -b 
+  cat $data_dir/list_of_lists.json | ./lib/json/JSON.sh -b 
 }
 
 #This grabs the useful data from the json file and
