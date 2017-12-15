@@ -1,11 +1,14 @@
 #!/bin/bash
 
 _lists () {
-  dump=huh.txt
-  ./json.sh < data/list_of_lists.json | tail -n +2 > $dump
-  list_id=$(grep -e  '"rsp","lists","list",[0-9],"id"' $dump) 
-  list_name=$(grep -e '"rsp","lists","list",[0-9],"name"' $dump)
-  printf "$list_id,$list_name"
+  tmp1=$(mktemp)
+  tmp2=$(mktemp)
+  tmp3=$(mktemp)
+  ./json.sh < data/list_of_lists.json | tail -n +2 > $tmp1
+  list_id=$(grep -e  '"rsp","lists","list",[0-9],"id"' $tmp1 | cut -f2 | sed 's/"//g' > $tmp2) 
+  list_name=$(grep -e '"rsp","lists","list",[0-9],"name"' $tmp1 | cut -f2 | sed 's/"//g' > $tmp3)
+  paste data/x.txt data/y.txt > data/lists.tsv
+  
 }
 
 #This grabs the useful data from the json file and
