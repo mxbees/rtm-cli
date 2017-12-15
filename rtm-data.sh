@@ -3,7 +3,7 @@
 _lists () {
   dump=$(mktemp)
   #$(cat $why/list_of_lists.json | ./lib/json/JSON.sh -b) > huh.txt 
-  json.sh < data/list_of_lists.json > huh.txt
+  ./json.sh < data/list_of_lists.json > huh.txt
 }
 
 #This grabs the useful data from the json file and
