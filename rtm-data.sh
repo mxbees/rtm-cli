@@ -1,10 +1,11 @@
 #!/bin/bash
 
 _lists () {
-  dump=$(mktemp)
-  list_id=$(./json.sh < data/list_of_lists.json | tail -n +2 | grep -e  '/"rsp","lists","list",[0-9],"id"/') #> $dump
-  echo "$list_id" 
-  #grep -e '"rsp","lists","list",[0-9],"name"'
+  dump=huh.txt
+  ./json.sh < data/list_of_lists.json | tail -n +2 > $dump
+  list_id=$(grep -e  '"rsp","lists","list",[0-9],"id"' $dump) 
+  list_name=$(grep -e '"rsp","lists","list",[0-9],"name"' $dump)
+  echo "$list_id $list_name"
 }
 
 #This grabs the useful data from the json file and
