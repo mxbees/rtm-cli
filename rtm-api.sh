@@ -13,9 +13,6 @@ api_url="https://api.rememberthemilk.com/services/rest/"
 #this script relies heavily on it.
 format="json"
 standard_args="api_key=$api_key&format=$format&auth_token=$auth_token"
-#You could easily swap this out for `curl -s` if you want.
-#I prefer wget for no principled reason.
-wget_cmd="wget -q -O -"
 
 #sign requests, pretty much all api calls need to be signed
 #https://www.rememberthemilk.com/services/api/authentication.rtm
@@ -38,7 +35,7 @@ get_frob () {
   method="rtm.auth.getFrob"
   args="method=$method&$standard_args"
   sig=$(get_sig "$args")
-  x=$($wget_cmd "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .frob | @text')
+  x=$(curl -s "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .frob | @text')
   echo "frob='$x'" >> ~/.rtmcfg
 }
 #builds the URL for giving permissison for the app to 
@@ -57,7 +54,7 @@ get_token () {
   method="rtm.auth.getToken"
   args="method=$method&$standard_args&frob=$frob"
   sig=$(get_sig "$args")
-  token=$($wget_cmd "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .auth | .token | @text')
+  token=$(curl -s "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .auth | .token | @text')
   echo "auth_token='$token'" >> ~/.rtmcfg
 }
 
@@ -74,7 +71,7 @@ check_token () {
   method="rtm.auth.checkToken"
   args="method=$method&$standard_args"
   sig=$(get_sig "$args")
-  check=$($wget_cmd "$api_url?$args&api_sig=$sig" | ./jsonsh/JSON.sh -b | head -n 1 | cut -f2 | sed 's/"//g')
+  check=$(curl -s "$api_url?$args&api_sig=$sig" | ./jsonsh/JSON.sh -b | head -n 1 | cut -f2 | sed 's/"//g')
   check $check
 }
 #Grabs the timeline. Need for all write requests.
@@ -83,7 +80,7 @@ get_timeline () {
   method="rtm.timelines.create"
   args="method=$method&$standard_args"
   sig=$(get_sig "$args")
-  timeline=$($wget_cmd "$api_url?$args&api_sig=$sig" | ./jsonsh/JSON.sh -b | tail -n1 | cut -f2 | sed 's/"//g')
+  timeline=$(curl -s "$api_url?$args&api_sig=$sig" | ./jsonsh/JSON.sh -b | tail -n1 | cut -f2 | sed 's/"//g')
   echo "$timeline"
 }
 
@@ -93,7 +90,7 @@ lists_getList () {
   method="rtm.lists.getList"
   args="method=$method&$standard_args"
   sig=$(get_sig "$args")
-  $wget_cmd "$api_url?$args&api_sig=$sig" #> /tmp/lists.json
+  curl -s "$api_url?$args&api_sig=$sig" #> /tmp/lists.json
 }
 #This matches the list name with its ID.
 index_lists () {
@@ -119,7 +116,7 @@ tasks_getList () {
     list_id=$(echo $line | cut -d',' -f1)
     args="method=$method&$standard_args&filter=status:incomplete&list_id=$list_id&last_sync=$last_sync"
     sig=$(get_sig "$args")
-    $wget_cmd "$api_url?$args&api_sig=$sig"
+    curl -s "$api_url?$args&api_sig=$sig"
   done < $data_dir/rtm_lists.csv
   
   date -Iseconds > $data_dir/last_sync.txt
@@ -144,7 +141,7 @@ tasks_complete () {
   t_id=$(echo "$x" | cut -d',' -f4)
   args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id"
   sig=$(get_sig "$args")
-  check=$($wget_cmd "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .stat')
+  check=$(curl -s "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .stat')
   check $check
 }
 #Add a task. For the sake of... simplicity, its usually
@@ -159,7 +156,7 @@ tasks_setPriority () {
   t_id=$(echo "$data" | jq -r '.rsp | .list | .taskseries | .task | .id')
   bargs="method=$smethod&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id&priority=$p"
   sig=$(get_sig "$bargs")
-  response=$($wget_cmd "$api_url?$bargs&api_sig=$sig")
+  response=$(curl -s "$api_url?$bargs&api_sig=$sig")
   check=$( echo "$response" | jq -r '.rsp | .stat')
   check $check
 }
@@ -170,7 +167,7 @@ tasks_add () {
   l_id=$(echo "$1" | sed 's/^.*#//g' | xargs -I{} grep {} /home/nina/Documents/code/halp_me_bot/data/rtm_lists.csv | cut -d',' -f1)
   args="method=$method&$standard_args&timeline=$timeline&name=$name&list_id=$l_id&parse=1" #
   sig=$(get_sig "$args")
-  response=$($wget_cmd "$api_url?$args&api_sig=$sig")
+  response=$(curl -s "$api_url?$args&api_sig=$sig")
   check=$(echo "$response" | jq -r '.rsp | .stat')
   check $check
   if [ $p == "1" -o $p == "2" -o $p == "3" ]
@@ -187,7 +184,7 @@ tasks_postpone () {
   t_id=$(echo "$x" | cut -d',' -f4)
   args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id"
   sig=$(get_sig "$args")
-  check=$($wget_cmd "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .stat')
+  check=$(curl -s "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .stat')
   check $check
 }
 
