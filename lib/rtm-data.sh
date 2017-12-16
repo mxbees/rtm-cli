@@ -1,71 +1,65 @@
 #!/bin/bash
 
+tmp_files () {
+  declare -A tmp
+  t=(a b c d e f g h i)
+
+  for tm in "${t[@]}"; do
+    tmp[$tm]=$(mktemp data/tassks.XXXXXXXXXX)
+  done
+}
+
 _lists () {
   tmp1=$(mktemp)
   tmp2=$(mktemp)
   tmp3=$(mktemp)
-  ./json.sh < $list_of_lists | tail -n +2 > $tmp1
+  ./json.sh < $list_json | tail -n +2 > $tmp1
   list_id=$(grep -e  '"rsp","lists","list",[0-9],"id"' $tmp1 | cut -f2 | sed 's/"//g' > $tmp2) 
   list_name=$(grep -e '"rsp","lists","list",[0-9],"name"' $tmp1 | cut -f2 | sed 's/"//g' > $tmp3)
   paste $tmp2 $tmp3 > data/lists.tsv
-  
+  sed -i '/39537782/d' data/lists.tsv
+}
+
+list_loop () {
+  cmd=$1
+  c=0
+  while read line; do
+  list_id=$(echo "$line" | cut -f1)
+    $cmd
+  c=$((c+1))
+  done < $rtm_lists
 }
 
 _tasks () {
-  tmp1=data/tmp1.txt #$(mktemp)
-  tmp2=$(mktemp)
-  tmp3=$(mktemp)
-  ./json.sh < $tasks_json | tail -n +2 > $tmp1
-}
+  > data/tasks.tsv
 
-#This grabs the useful data from the json file and
-#converts it to a csv.
-index_oneTask () {
-  list=$(jq -r ".rsp|.tasks|.list[$c]|.id" /tmp/tasks.json| xargs -0 -I{} grep {} /tmp/list-vars.txt | cut -d'=' -f1 )
-  series_id=$(jq -r ".rsp|.tasks|.list[$c] |.taskseries|.id" /tmp/tasks.json)
-  task_id=$(jq -r ".rsp|.tasks|.list[$c] |.taskseries| .task | .id" /tmp/tasks.json)
-  name=$(jq -r ".rsp|.tasks|.list[$c] |.taskseries|.name" /tmp/tasks.json)
-  priority=$(jq -r ".rsp|.tasks|.list[$c] |.taskseries|.task|.priority" /tmp/tasks.json)
-  due=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries |.task|.due" /tmp/tasks.json)
-  due_date=$(date --date="$due" +'%D %H:%M')
-  tags=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries |.tags[]|.tag" /tmp/tasks.json)
-  echo "$priority,$due_date,$series_id,$task_id,$list,$name" >> /tmp/tasks.csv
-}
+  declare -A tmp
+  t=(a b c d e f g h i)
 
-index_zeroMore () {
-  while [ $c1 -lt $y ]
-  do
-    list=$(jq -r ".rsp|.tasks|.list[$c]|.id" /tmp/tasks.json| xargs -0 -I{} grep {} /tmp/list-vars.txt | cut -d'=' -f1 )
-    series_id=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries[$c1]|.id" /tmp/tasks.json)
-    task_id=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries[$c1]| .task | .id" /tmp/tasks.json)
-    name=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries[$c1]|.name" /tmp/tasks.json)
-    priority=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries[$c1]|.task|.priority" /tmp/tasks.json)
-    due=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries[$c1]|.task|.due" /tmp/tasks.json)
-    due_date=$(date --date="$due" +'%D %H:%M')
-    tags=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries[$c1]|.tags[]|.tag" /tmp/tasks.json)
-    echo "$priority,$due_date,$series_id,$task_id,$list,$name" >> /tmp/tasks.csv
-  c1=$((c1+1))
+  for tm in "${t[@]}"; do
+    tmp[$tm]=$(mktemp data/tassks.XXXXXXXXXX)
   done
-}
-index_tasks () {
-> /tmp/tasks.csv
-c=0
-  x=$(jq '.rsp|.tasks|.list|length' /tmp/tasks.json)
-  while [ $c -lt $x ]
-  do
-    y=$(jq ".rsp|.tasks|.list[$c]|.taskseries|length" /tmp/tasks.json)
-    z=$(jq -r ".rsp|.tasks|.list[$c]|.taskseries|type" /tmp/tasks.json)
-    c1=0
-    if [ $z == "object" ]
-    then
-      index_oneTask
-    fi
-    if [ $z == "array" ]
-    then
-      index_zeroMore
-    fi
-  c=$((c+1))
-  done
+
+  all_tasks=$(mktemp)
+  ./json.sh < $tasks_json | tail -n +2 > $all_tasks
+  list_index=$(grep -e '"taskseries",[0-9],"id"' $all_tasks | cut -f1 | cut -d',' -f4 > ${tmp[a]})
+  task_series_id=$(grep -e '"taskseries",[0-9],"id"' $all_tasks | cut -f2 | sed 's/"//g' > ${tmp[b]})
+  created=$(grep -e '"taskseries",[0-9],"created"' $all_tasks | cut -f2 | sed 's/"//g' > ${tmp[c]})
+  modified=$(grep -e '"taskseries",[0-9],"modified"' $all_tasks | cut -f2 | sed 's/"//g' > ${tmp[d]})
+  name=$(grep -e '"taskseries",[0-9],"name"' $all_tasks | cut -f2 | sed 's/"//g' > ${tmp[e]})
+  url=$(grep -e '"taskseries",[0-9],"url"' $all_tasks | cut -f2 | sed 's/"//g' > ${tmp[f]})
+  task_id=$(grep -e '"task",[0-9],"id"' $all_tasks | cut -f2 | sed 's/"//g' > ${tmp[g]})
+  due=$(grep -e '"task",[0-9],"due"' $all_tasks | cut -f2 | sed 's/"//g' > ${tmp[h]})
+  priority=$(grep -e '"task",[0-9],"priority"' $all_tasks | cut -f2 | sed 's/"//g' > ${tmp[i]})
+
+  paste ${tmp[@]} > data/tasks.tsv 
+  rm -- "${tmp[@]}"
+  sed -i '/39537783/d' data/lists.tsv
+  mapfile -t list < <(cut -f1 data/lists.tsv)
+  while read line; do
+    l_index=$(cut -f1)
+    sed -i.bak "s/^[0-9]/${list[$l_index]}/" data/tasks.tsv
+  done < data/tasks.tsv
 }
 
 #this is the default sorting order. First by priority,

@@ -92,33 +92,16 @@ lists_getList () {
   sig=$(get_sig "$args")
   curl -s "$api_url?$args&api_sig=$sig" #> /tmp/lists.json
 }
-#This matches the list name with its ID.
-index_lists () {
-> /tmp/list-vars.txt
-c=0
-  x=$(jq '.rsp | .lists | .list | length' /tmp/lists.json)
-  while [ $c -lt $x ]
-  do
-    list_name=$(jq -r ".rsp | .lists | .list[$c] | .name | @text" /tmp/lists.json)
-    list_id=$(jq -r ".rsp | .lists | .list[$c] | .id | @text" /tmp/lists.json)
-    echo "$list_name=$list_id" | tr -d ' ' >> /tmp/list-vars.txt
-  c=$((c+1))
-  done 
-}
 
 #Grab the tasks and save the json to tmp
 #https://www.rememberthemilk.com/services/api/methods/rtm.tasks.getList.rtm
 tasks_getList () {
   method="rtm.tasks.getList"
  # last_sync=$(cat $data_dir/last_sync.txt)
-  args="method=$method&$standard_args&filter=status:incomplete"
-  #while read line; do
-  #  list_id=$(echo $line | cut -d',' -f1)
-  #  args="method=$method&$standard_args&filter=status:incomplete&list_id=$list_id&last_sync=$last_sync"
-    sig=$(get_sig "$args")
-    curl -s "$api_url?$args&api_sig=$sig"
-  #done < $data_dir/rtm_lists.csv
-  
+#  args="method=$method&$standard_args&filter=status:incomplete"
+  args="method=$method&$standard_args&filter=status:incomplete&list_id=$list_id" #&last_sync=$last_sync
+  sig=$(get_sig "$args")
+  curl -s  "$api_url?$args&api_sig=$sig" > data/$list_id.json
  # date -Iseconds > $data_dir/last_sync.txt
 }
 
