@@ -13,10 +13,10 @@ _lists () {
   tmp1=$(mktemp)
   tmp2=$(mktemp)
   tmp3=$(mktemp)
-  ./json.sh < $list_json | tail -n +2 > $tmp1
-  list_id=$(grep -e  '"rsp","lists","list",[0-9],"id"' $tmp1 | cut -f2 | sed 's/"//g' > $tmp2) 
-  list_name=$(grep -e '"rsp","lists","list",[0-9],"name"' $tmp1 | cut -f2 | sed 's/"//g' > $tmp3)
-  paste $tmp2 $tmp3 > "$rtm_lists"
+  ./json.sh < "$list_json" | tail -n +2 "$tmp1"
+  list_id=$(grep -e  '"rsp","lists","list",[0-9],"id"' "$tmp1" | cut -f2 | sed 's/"//g' > "$tmp2") 
+  list_name=$(grep -e '"rsp","lists","list",[0-9],"name"' "$tmp1" | cut -f2 | sed 's/"//g' > "$tmp3")
+  paste "$tmp2" "$tmp3" > "$rtm_lists"
   sed -i '/39537782/d' "$rtm_lists"
 }
 
@@ -25,7 +25,7 @@ list_loop () {
   c=0
   while read line; do
   list_id=$(echo "$line" | cut -f1)
-    "$cmd"
+    $cmd
   c=$((c+1))
   done < "$rtm_lists"
 }
@@ -37,28 +37,24 @@ _tasks () {
   t=(a b c d e f g h i j)
 
   for tm in "${t[@]}"; do
-    tmp[$tm]=$(mktemp data/tassks.XXXXXXXXXX)
+    tmp[$tm]=$(mktemp)
   done
 
   null_filter () {
-    u=$(echo "$1" | sed 's/"//g')
-    if [ -z "$u" ]; then
-      echo "null"
-    else
-      echo "$1"
-    fi
+    echo "$1" 
+    echo "$1" 
   }
-  all_tasks='data/why.txt'
+  all_tasks=$(mktemp)
   ./json.sh < "$tasks_json" | tail -n +2 > "$all_tasks"
   list_id=$(grep -e '"taskseries",[0-9],"id"' "$all_tasks" | cut -f1 | cut -d',' -f4 > "${tmp[a]}")
   task_series_id=$(grep -e '"taskseries",[0-9],"id"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[b]}")
   task_id=$(grep -e '"task",[0-9],"id"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[c]}")
   priority=$(grep -e '"task",[0-9],"priority"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[d]}")
   name=$(grep -e '"taskseries",[0-9],"name"' "$all_tasks" | cut -f2 > "${tmp[e]}")
-  due=$(grep -e '"task",[0-9],"due"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[f]}")
-  created=$(grep -e '"taskseries",[0-9],"created"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[f]}")
+  due=$(grep -e '"task",[0-9],"due"' "$all_tasks" | cut -f2 | sed 's/""/null/g' | sed 's/"//g' > "${tmp[f]}")
+  created=$(grep -e '"taskseries",[0-9],"created"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[g]}")
   modified=$(grep -e '"taskseries",[0-9],"modified"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[h]}")
-
+#grep -e '"task",[0-9],"due"' "$all_tasks" | cut -f2 | sed 's/""/null/g' | sed 's/"//g' > "${tmp[i]}"
   paste "${tmp[@]}" > "${tmp[j]}" 
   sed -i '/39537783/d' "$rtm_lists"
   mapfile -t list < <(cut -f1 "$rtm_lists")
@@ -79,14 +75,7 @@ task_loop () {
   OLDIFS=$IFS
   IFS=$'\t'
   while read -r task_list task_series_id task_id priority name due created modified; do
-    echo "task list: $task_list"
-    echo "task_series_id: $task_series_id"
-    echo "created: $created"
-    echo "priority: $priority"
-    echo "name: $name"
-    echo "task id: $task_id"
-    echo "due: $due"
-    echo "modified: $modified"
+    echo -n "$cmd"
   done < "$tasks"
   IFS=$OLDIFS
 }

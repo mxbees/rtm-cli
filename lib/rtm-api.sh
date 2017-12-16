@@ -11,8 +11,7 @@ api_url="https://api.rememberthemilk.com/services/rest/"
 #from here and in the $standard_args variable and you'll 
 #get xml back. For json you'll need to install jq, because 
 #this script relies heavily on it.
-format="json"
-standard_args="api_key=$api_key&format=$format&auth_token=$auth_token"
+standard_args="api_key=$api_key&format=json&auth_token=$auth_token"
 
 #sign requests, pretty much all api calls need to be signed
 #https://www.rememberthemilk.com/services/api/authentication.rtm
@@ -90,7 +89,7 @@ lists_getList () {
   method="rtm.lists.getList"
   args="method=$method&$standard_args"
   sig=$(get_sig "$args")
-  curl -s "$api_url?$args&api_sig=$sig" #> /tmp/lists.json
+  curl -s "$api_url?$args&api_sig=$sig"
 }
 
 #Grab the tasks and save the json to tmp
@@ -101,7 +100,7 @@ tasks_getList () {
 #  args="method=$method&$standard_args&filter=status:incomplete"
   args="method=$method&$standard_args&filter=status:incomplete&list_id=$list_id" #&last_sync=$last_sync
   sig=$(get_sig "$args")
-  curl -s  "$api_url?$args&api_sig=$sig" > data/$list_id.json
+  curl -s "$api_url?$args&api_sig=$sig" > data/$list_id.json
  # date -Iseconds > $data_dir/last_sync.txt
 }
 

@@ -4,8 +4,8 @@
 
 #list_json=$(mktemp)
 list_json='data/list_of_lists.json'
-tasks_json='data/all-tasks.json'
-#tasks_json=$(mktemp)
+#tasks_json='data/all-tasks.json'
+tasks_json=$(mktemp)
 rtm_lists='data/lists.tsv'
 tasks='data/tasks.tsv'
 #rtm_lists=$(mktemp)
@@ -17,12 +17,12 @@ for i in "$@"
 do
 case $i in
   list|ls)
-    #list_loop "tasks_getList"
+    list_loop "tasks_getList"
     _tasks
     task_loop
   shift;;  
   lsl)
-    lists_getList > $list_json
+    lists_getList #> "$list_json"
     list_loop _lists
   shift;;
   add|a)
