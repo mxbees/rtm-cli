@@ -1,6 +1,6 @@
 #!/bin/bash
-. lib/rtm-api.sh
-. lib/rtm-data.sh
+. $PWD/lib/rtm-api.sh
+. $PWD/lib/rtm-data.sh
 
 list_json='data/list_of_lists.json'
 #tasks_json=$(mktemp)
