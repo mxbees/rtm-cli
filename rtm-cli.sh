@@ -4,10 +4,10 @@
   . $PWD/lib/rtm/lib/rtm-api.sh &> /dev/null
   . $PWD/lib/rtm/lib/rtm-data.sh &> /dev/null
 
-list_json='data/list_of_lists.json'
-#tasks_json=$(mktemp)
-rtm_lists='data/lists.tsv'
-tasks='data/tasks.tsv'
+lists_json='data/lists.json'
+tasks_json='data/tasks.json'
+lists_tsv='data/lists.tsv'
+tasks_tsv='data/tasks.tsv'
 #rtm_lists=$(mktemp)
 
 #does the actions below. i should add a 'help' section.
@@ -25,7 +25,7 @@ case $i in
       task_loop 'data/pri.tsv'
     else
       tasks2tsv
-      task_loop "$tasks"
+      task_loop "$tasks_tsv"
     fi
   shift;;  
   add|a)
@@ -50,9 +50,11 @@ case $i in
   shift
   ;;
   sync)
-    lists_getList > "$list_json"
+    lists_getList > "$lists_json"
     _lists
     list_loop "tasks_getList"
+    tasks_getList $(grep "All Tasks" "$lists_tsv" | cut -f1)
+    tasks2tsv
   shift
   ;;
   authorize)
