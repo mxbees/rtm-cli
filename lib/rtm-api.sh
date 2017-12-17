@@ -23,7 +23,7 @@ get_sig ()
 
 check () {
   rsp="$1"
-  m=$(echo "$rsp" | ./json.sh | grep '"rsp","stat"' | cut -f2)
+  m=$(echo "$rsp" | ./json.sh 2> /dev/null | grep '"rsp","stat"' | cut -f2 )
   if [ "$m" != '"ok"' ]; then
     echo "$response"
   fi
