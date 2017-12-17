@@ -17,11 +17,14 @@ standard_args="api_key=$api_key&format=json&auth_token=$auth_token"
 #https://www.rememberthemilk.com/services/api/authentication.rtm
 get_sig ()
 {
-  echo -n $api_secret$(echo "$1" | tr '&' '\n' | sort | tr -d '\n' | tr -d '=') | md5sum | cut -d' ' -f1
+    echo -n $api_secret$(echo "$1" | tr '&' '\n' | sort | tr -d '\n' | tr -d '=') | md5sum | cut -d' ' -f1
 }
 
+
 check () {
-  if [ "$1" != 'ok' ]; then
+  rsp="$1"
+  m=$(echo "$rsp" | ./json.sh | grep '"rsp","stat"' | cut -f2)
+  if [ "$m" != '"ok"' ]; then
     echo "$response"
   fi
 }
@@ -100,7 +103,7 @@ tasks_getList () {
   list_id=$1
   args="method=$method&$standard_args&filter=status:incomplete&list_id=$list_id" #&last_sync=$last_sync
   sig=$(get_sig "$args")
-  curl -s "$api_url?$args&api_sig=$sig" > "$tasks_json"
+  curl -s "$api_url?$args&api_sig=$sig" > "$tasks_json" #data/$list_id.json
  # date -Iseconds > $data_dir/last_sync.txt
 }
 
@@ -109,14 +112,26 @@ tasks_getList () {
 #https://www.rememberthemilk.com/services/api/methods/rtm.tasks.complete.rtm
 tasks_complete () {
   method="rtm.tasks.complete"
-  x=$(grep "item\[$1\]" /tmp/indexed_tasks.csv | sed "s/item\[$1\]=//g" )
-  l_id=$(echo "$x" | cut -d',' -f5 | xargs -0 -I{} grep {} /tmp/list-vars.txt | cut -d'=' -f2)
-  ts_id=$(echo "$x" | cut -d',' -f3)
-  t_id=$(echo "$x" | cut -d',' -f4)
+  task=$(sed "${1}q;d" $tasks_tsv)
+  l_id=$(echo "$task" | cut -f2)
+  ts_id=$(echo "$task" | cut -f3)
+  t_id=$(echo "$task" | cut -f4)
   args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id"
   sig=$(get_sig "$args")
-  check=$(curl -s "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .stat')
-  check $check
+  response=$(curl -s "$api_url?$args&api_sig=$sig")
+  check $response
+}
+
+tasks_delete () {
+  method="rtm.tasks.delete"
+  task=$(sed "${1}q;d" $tasks_tsv)
+  l_id=$(echo "$task" | cut -f2)
+  ts_id=$(echo "$task" | cut -f3)
+  t_id=$(echo "$task" | cut -f4)
+  args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id"
+  sig=$(get_sig "$args")
+  response=$(curl -s "$api_url?$args&api_sig=$sig")
+  check $response
 }
 #Add a task. For the sake of... simplicity, its usually
 #best to always add to a specific list. Something wonky
@@ -131,23 +146,22 @@ tasks_setPriority () {
   bargs="method=$smethod&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id&priority=$p"
   sig=$(get_sig "$bargs")
   response=$(curl -s "$api_url?$bargs&api_sig=$sig")
-  check=$( echo "$response" | jq -r '.rsp | .stat')
-  check $check
+  check $response
 }
 tasks_add () {
   method="rtm.tasks.add"
-  p=$(echo $1 | sed 's/\ .*//g' | sed 's/!//g')
-  name=$(echo "$1" | sed 's/^![1-9]\ //g' | sed 's/\ #[a-z]*$//g')
-  l_id=$(echo "$1" | sed 's/^.*#//g' | xargs -I{} grep {} /home/nina/Documents/code/halp_me_bot/data/rtm_lists.csv | cut -d',' -f1)
-  args="method=$method&$standard_args&timeline=$timeline&name=$name&list_id=$l_id&parse=1" #
-  sig=$(get_sig "$args")
-  response=$(curl -s "$api_url?$args&api_sig=$sig")
-  check=$(echo "$response" | jq -r '.rsp | .stat')
-  check $check
-  if [ $p == "1" -o $p == "2" -o $p == "3" ]
-  then
-    tasks_setPriority "$p" "$response"
+  task="$1"
+  name=$(echo "$task" | sed 's/\ #.*$//g')
+  u=$(expr match "$task" '.*#\([a-z]*\)')
+  if [[ -z $u ]]; then 
+    l_id=39537778
+  else
+    l_id=$(grep "$u" $lists_tsv | cut -f1)
   fi
+  args="method=$method&$standard_args&timeline=$timeline&name=$name&parse=1&list_id=$l_id" 
+  sig=$(get_sig "$args")
+  response=$(wget -q -O - "$api_url?$args&api_sig=$sig")
+  check "$response"
 }
 
 tasks_postpone () {

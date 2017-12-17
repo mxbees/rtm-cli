@@ -21,24 +21,25 @@ case $i in
       task_loop 'data/due.tsv'
     elif [[ "$2" = '-p' ]]; then
       task_loop 'data/pri.tsv'
+    elif [[ "$2" = "-l" ]]; then
+      task_loop 'data/list-sort.tsv'
     else
       task_loop "$tasks_tsv"
     fi
   shift;;  
   add|a)
     tasks_add "$2"
-     # sync_tasks
-     #sort_priority
-    #display_tasks /tmp/by-priority.csv
+    sync_tasks
   shift
   ;;
   complete|c)
     tasks_complete "$2"
     sync_tasks
-    sort_priority
-    display_tasks /tmp/by-priority.csv
   shift
   ;;
+  test)
+    list_loop
+  shift;;
   postpone|p)
     tasks_postpone $2
     sync_tasks
@@ -47,12 +48,7 @@ case $i in
   shift
   ;;
   sync)
-    lists_getList > "$lists_json"
-    _lists
-    tasks_getList $(grep "All Tasks" "$lists_tsv" | cut -f1)
-    tasks2tsv
-    by_due_date
-    by_priority
+    sync_tasks
   shift
   ;;
   authorize)
@@ -60,9 +56,9 @@ case $i in
     . ~/.rtmcfg
   shift
   ;;
-  date|d)
-    sort_date
-    display_tasks /tmp/by-date.csv
+  del|d)
+    tasks_delete
+    sync_tasks
   shift
   ;;
   check)
