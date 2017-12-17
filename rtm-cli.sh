@@ -18,13 +18,13 @@ do
 case $i in
   list|ls)
     if [[ "$2" = '-d' ]]; then
-      task_loop 'data/due.tsv'
+      display 'data/due.tsv' _pretty
     elif [[ "$2" = '-p' ]]; then
-      task_loop 'data/pri.tsv'
+      display 'data/pri.tsv' _pretty
     elif [[ "$2" = "-l" ]]; then
-      task_loop 'data/list-sort.tsv'
+      display 'data/list-sort.tsv' _pretty
     else
-      task_loop "$tasks_tsv"
+      display "$tasks_tsv" _pretty
     fi
   shift;;  
   add|a)
@@ -37,7 +37,7 @@ case $i in
     fi
   shift
   ;;
-  complete|c)
+  com|c)
     q=$(tasks_complete "$2")
     if [[ $? = 0 ]];then
       sed -i "${2}d" $tasks_tsv
@@ -75,5 +75,16 @@ case $i in
     check_token
   shift
   ;;
+  bls)
+  if [[ "$2" = '-d' ]]; then
+    display 'data/due.tsv' _md
+  elif [[ "$2" = '-p' ]]; then
+    display 'data/pri.tsv' _md
+  elif [[ "$2" = "-l" ]]; then
+    display 'data/list-sort.tsv' _md
+  else
+    display "$tasks_tsv" _md
+  fi
+  shift;;
 esac
 done

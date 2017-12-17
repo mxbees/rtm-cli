@@ -113,8 +113,9 @@ sync_tasks () {
   priority_filter
 }
 
-task_loop () {
+display () {
   lst=$1
+  fmt=$2
   OLDIFS=$IFS
   IFS=$'\t'
   while read -r index task_list task_series_id task_id priority name due created modified; do
@@ -122,20 +123,29 @@ task_loop () {
     list_name=$(grep "$task_list" "$lists_tsv" | cut -f2)
     if [[ "$due" =~ $r ]]; then
       due_date=$(date -d "$due" '+%b %d')
-      display_task 
+      $fmt
     elif [[ "$due" = 'null' ]]; then
-      display_task 
+      $fmt 
     else
       due_date=$(date -d "$due" '+%b %d %R')
-      display_task 
+      $fmt 
     fi
   done < "$lst"
   IFS=$OLDIFS
 }
 
+_md () {
+  case $priority in
+    1) echo "*!$priority* $name *$due_date* _#$list_name_" ;;
+    2) echo "*!$priority* $name *$due_date*  _#$list_name_" ;;
+    3) echo "*!$priority* $name *$due_date* _#$list_name_" ;;
+    N) echo "$name *$due_date* _#$list_name_" ;;
+  esac
+}
+
 #this displays your tasks to stdout looking reasonably,
 #I think. I want to add colour.
-display_task () {
+pretty () {
 bold=$(tput bold)
 normal=$(tput sgr0)
 red=$(tput setaf 1)
