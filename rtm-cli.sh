@@ -15,9 +15,16 @@ for i in "$@"
 do
 case $i in
   list|ls)
-    #_tasks
-    _by_list
-    task_loop
+    if [[ "$2" = '-d' ]]; then
+      _by_due_date
+      task_loop 'data/due.tsv'
+    elif [[ "$2" = '-p' ]]; then
+      _by_priority 
+      task_loop 'data/pri.tsv'
+    else
+      tasks2tsv
+      task_loop "$tasks"
+    fi
   shift;;  
   lsl)
     _lists

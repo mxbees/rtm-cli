@@ -97,19 +97,10 @@ lists_getList () {
 tasks_getList () {
   method="rtm.tasks.getList"
  # last_sync=$(cat $data_dir/last_sync.txt)
-#  args="method=$method&$standard_args&filter=status:incomplete"
-  args="method=$method&$standard_args&filter=status:incomplete&list_id=$list_id" #&last_sync=$last_sync
+  args="method=$method&$standard_args&filter=status:incomplete&list_id=$list_id&last_sync=$last_sync" #&last_sync=$last_sync
   sig=$(get_sig "$args")
   curl -s "$api_url?$args&api_sig=$sig" > data/$list_id.json
  # date -Iseconds > $data_dir/last_sync.txt
-}
-
-#Bundle the above four steps for one sync.
-sync_tasks () {
-  lists_getList
-  index_lists
-  tasks_getList
-  index_tasks
 }
 
 #This will mark a task as complete. And this action can
