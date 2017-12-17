@@ -145,7 +145,7 @@ _md () {
 
 #this displays your tasks to stdout looking reasonably,
 #I think. I want to add colour.
-pretty () {
+_pretty () {
 bold=$(tput bold)
 normal=$(tput sgr0)
 red=$(tput setaf 1)
