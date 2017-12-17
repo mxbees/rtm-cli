@@ -26,9 +26,6 @@ case $i in
       task_loop "$tasks"
     fi
   shift;;  
-  lsl)
-    _lists
-  shift;;
   add|a)
     tasks_add "$2"
      # sync_tasks
@@ -53,6 +50,7 @@ case $i in
   sync)
     #sync_tasks
     lists_getList > "$list_json"
+    _lists
     list_loop "tasks_getList"
   shift
   ;;
