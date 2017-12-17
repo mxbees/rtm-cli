@@ -1,6 +1,8 @@
 #!/bin/bash
-. $PWD/lib/rtm-api.sh
-. $PWD/lib/rtm-data.sh
+  . lib/rtm-api.sh &> /dev/null
+  . lib/rtm-data.sh &> /dev/null
+  . $PWD/lib/rtm/lib/rtm-api.sh &> /dev/null
+  . $PWD/lib/rtm/lib/rtm-data.sh &> /dev/null
 
 list_json='data/list_of_lists.json'
 #tasks_json=$(mktemp)
@@ -48,7 +50,6 @@ case $i in
   shift
   ;;
   sync)
-    #sync_tasks
     lists_getList > "$list_json"
     _lists
     list_loop "tasks_getList"
