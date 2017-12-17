@@ -26,6 +26,8 @@ check () {
   m=$(echo "$rsp" | ./json.sh 2> /dev/null | grep '"rsp","stat"' | cut -f2 )
   if [ "$m" != '"ok"' ]; then
     echo "$response"
+  else
+    return
   fi
 }
 
@@ -107,6 +109,27 @@ tasks_getList () {
  # date -Iseconds > $data_dir/last_sync.txt
 }
 
+tasks_add () {
+  method="rtm.tasks.add"
+  task="$1"
+  name=$(echo "$task" | sed 's/\ #.*$//g')
+  u=$(expr match "$task" '.*#\([a-z]*\)')
+  if [[ -z $u ]]; then 
+    l_id=39537778
+  else
+    l_id=$(grep "$u" $lists_tsv | cut -f1)
+  fi
+  args="method=$method&$standard_args&timeline=$timeline&name=$name&parse=1&list_id=$l_id" 
+  sig=$(get_sig "$args")
+  response=$(wget -q -O - "$api_url?$args&api_sig=$sig")
+  m=$(echo "$response" | ./json.sh 2> /dev/null | grep '"rsp","stat"' | cut -f2 )
+  if [ "$m" = '"ok"' ]; then
+    return
+  else
+    echo "$response"
+  fi
+}
+
 #This will mark a task as complete. And this action can
 #be undone if you need.
 #https://www.rememberthemilk.com/services/api/methods/rtm.tasks.complete.rtm
@@ -119,7 +142,12 @@ tasks_complete () {
   args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id"
   sig=$(get_sig "$args")
   response=$(curl -s "$api_url?$args&api_sig=$sig")
-  check $response
+  m=$(echo "$response" | ./json.sh 2> /dev/null | grep '"rsp","stat"' | cut -f2 )
+  if [ "$m" = '"ok"' ]; then
+    return
+  else
+    echo "$response"
+  fi
 }
 
 tasks_delete () {
@@ -147,21 +175,6 @@ tasks_setPriority () {
   sig=$(get_sig "$bargs")
   response=$(curl -s "$api_url?$bargs&api_sig=$sig")
   check $response
-}
-tasks_add () {
-  method="rtm.tasks.add"
-  task="$1"
-  name=$(echo "$task" | sed 's/\ #.*$//g')
-  u=$(expr match "$task" '.*#\([a-z]*\)')
-  if [[ -z $u ]]; then 
-    l_id=39537778
-  else
-    l_id=$(grep "$u" $lists_tsv | cut -f1)
-  fi
-  args="method=$method&$standard_args&timeline=$timeline&name=$name&parse=1&list_id=$l_id" 
-  sig=$(get_sig "$args")
-  response=$(wget -q -O - "$api_url?$args&api_sig=$sig")
-  check "$response"
 }
 
 tasks_postpone () {

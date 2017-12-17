@@ -28,13 +28,23 @@ case $i in
     fi
   shift;;  
   add|a)
-    tasks_add "$2"
-    sync_tasks
+    g=$(tasks_add "$2")
+    if [[ $? = 0 ]];then
+      echo "task added"
+      sync_tasks &
+    else
+      echo "$g"
+    fi
   shift
   ;;
   complete|c)
-    tasks_complete "$2"
-    sync_tasks
+    q=$(tasks_complete "$2")
+    if [[ $? = 0 ]];then
+      sed -i "${2}d" $tasks_tsv
+      echo "task $2 completed :D"
+    else
+      echo "$q"
+    fi
   shift
   ;;
   test)
@@ -57,7 +67,7 @@ case $i in
   shift
   ;;
   del|d)
-    tasks_delete
+    tasks_delete "$2"
     sync_tasks
   shift
   ;;
