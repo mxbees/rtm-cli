@@ -70,8 +70,8 @@ check_token () {
   method="rtm.auth.checkToken"
   args="method=$method&$standard_args"
   sig=$(get_sig "$args")
-  check=$(curl -s "$api_url?$args&api_sig=$sig" | ./jsonsh/JSON.sh -b | head -n 1 | cut -f2 | sed 's/"//g')
-  check $check
+  check=$(curl -s "$api_url?$args&api_sig=$sig" | ./json.sh -b | head -n 1 | cut -f2 | sed 's/"//g')
+  echo "$check"
 }
 #Grabs the timeline. Need for all write requests.
 #https://www.rememberthemilk.com/services/api/timelines.rtm
@@ -79,7 +79,7 @@ get_timeline () {
   method="rtm.timelines.create"
   args="method=$method&$standard_args"
   sig=$(get_sig "$args")
-  timeline=$(curl -s "$api_url?$args&api_sig=$sig" | ./jsonsh/JSON.sh -b | tail -n1 | cut -f2 | sed 's/"//g')
+  timeline=$(curl -s "$api_url?$args&api_sig=$sig" | ./json.sh -b | tail -n1 | cut -f2 | sed 's/"//g')
   echo "$timeline"
 }
 

@@ -13,7 +13,7 @@ _lists () {
   tmp1=$(mktemp)
   tmp2=$(mktemp)
   tmp3=$(mktemp)
-  ./json.sh < "$list_json" | tail -n +2 "$tmp1"
+  ./json.sh < "$list_json" | tail -n +2 > "$tmp1"
   list_id=$(grep -e  '"rsp","lists","list",[0-9],"id"' "$tmp1" | cut -f2 | sed 's/"//g' > "$tmp2") 
   list_name=$(grep -e '"rsp","lists","list",[0-9],"name"' "$tmp1" | cut -f2 | sed 's/"//g' > "$tmp3")
   paste "$tmp2" "$tmp3" > "$rtm_lists"
@@ -30,8 +30,8 @@ list_loop () {
   done < "$rtm_lists"
 }
 
-_tasks () {
-  > "$tasks"
+_json2tsv () {
+  > "$list_name"
 
   declare -A tmp
   t=(a b c d e f g h i j)
@@ -45,7 +45,7 @@ _tasks () {
     echo "$1" 
   }
   all_tasks=$(mktemp)
-  ./json.sh < "$tasks_json" | tail -n +2 > "$all_tasks"
+  ./json.sh < data/$p.json | tail -n +2 > "$all_tasks"
   list_id=$(grep -e '"taskseries",[0-9],"id"' "$all_tasks" | cut -f1 | cut -d',' -f4 > "${tmp[a]}")
   task_series_id=$(grep -e '"taskseries",[0-9],"id"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[b]}")
   task_id=$(grep -e '"task",[0-9],"id"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[c]}")
@@ -54,20 +54,24 @@ _tasks () {
   due=$(grep -e '"task",[0-9],"due"' "$all_tasks" | cut -f2 | sed 's/""/null/g' | sed 's/"//g' > "${tmp[f]}")
   created=$(grep -e '"taskseries",[0-9],"created"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[g]}")
   modified=$(grep -e '"taskseries",[0-9],"modified"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[h]}")
-#grep -e '"task",[0-9],"due"' "$all_tasks" | cut -f2 | sed 's/""/null/g' | sed 's/"//g' > "${tmp[i]}"
   paste "${tmp[@]}" > "${tmp[j]}" 
-  sed -i '/39537783/d' "$rtm_lists"
+  #sed -i '/39537783/d' "$rtm_lists"
   mapfile -t list < <(cut -f1 "$rtm_lists")
   while read line; do
     l_index=$(echo "$line" | cut -f1)
     sub=$(echo "${list[$l_index]}")
-    echo "$line" | sed "0,/$l_index/s//${list[$l_index]}/" >> "$tasks"
+    echo "$line" | sed "0,/$l_index/s//${list[$l_index]}/" >> "$list_name"
   done < "${tmp[j]}"
   rm -- "${tmp[@]}"
 }
 
-_priority_sort () {
-  x=
+_by_list () {
+  while read o; do
+    #list_name="data/$(echo "$o" | cut -f2 | sed 's/\ //g').txt"
+    p=$(echo "$o" | cut -f1)
+    list_name="data/$p.tsv"
+    _json2tsv
+  done < $rtm_lists
 }
 
 task_loop () {

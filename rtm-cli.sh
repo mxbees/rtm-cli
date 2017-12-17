@@ -2,10 +2,8 @@
 . lib/rtm-api.sh
 . lib/rtm-data.sh
 
-#list_json=$(mktemp)
 list_json='data/list_of_lists.json'
-#tasks_json='data/all-tasks.json'
-tasks_json=$(mktemp)
+#tasks_json=$(mktemp)
 rtm_lists='data/lists.tsv'
 tasks='data/tasks.tsv'
 #rtm_lists=$(mktemp)
@@ -17,13 +15,12 @@ for i in "$@"
 do
 case $i in
   list|ls)
-    list_loop "tasks_getList"
-    _tasks
+    #_tasks
+    _by_list
     task_loop
   shift;;  
   lsl)
-    lists_getList #> "$list_json"
-    list_loop _lists
+    _lists
   shift;;
   add|a)
     tasks_add "$2"
@@ -47,7 +44,9 @@ case $i in
   shift
   ;;
   sync)
-    sync_tasks
+    #sync_tasks
+    lists_getList > "$list_json"
+    list_loop "tasks_getList"
   shift
   ;;
   authorize)
