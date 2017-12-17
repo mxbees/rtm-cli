@@ -18,13 +18,10 @@ do
 case $i in
   list|ls)
     if [[ "$2" = '-d' ]]; then
-      _by_due_date
       task_loop 'data/due.tsv'
     elif [[ "$2" = '-p' ]]; then
-      _by_priority 
       task_loop 'data/pri.tsv'
     else
-      tasks2tsv
       task_loop "$tasks_tsv"
     fi
   shift;;  
@@ -52,9 +49,10 @@ case $i in
   sync)
     lists_getList > "$lists_json"
     _lists
-    list_loop "tasks_getList"
     tasks_getList $(grep "All Tasks" "$lists_tsv" | cut -f1)
     tasks2tsv
+    by_due_date
+    by_priority
   shift
   ;;
   authorize)

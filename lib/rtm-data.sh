@@ -1,14 +1,5 @@
 #!/bin/bash
 
-tmp_files () {
-  declare -A tmp
-  t=(a b c d e f g h i)
-
-  for tm in "${t[@]}"; do
-    tmp[$tm]=$(mktemp data/tassks.XXXXXXXXXX)
-  done
-}
-
 _lists () {
   tmp1=$(mktemp)
   tmp2=$(mktemp)
@@ -76,26 +67,17 @@ task_loop () {
   IFS=$OLDIFS
 }
 
-list_loop () {
-  cmd=$1
-  c=0
-  while read line; do
-  list_id=$(echo "$line" | cut -f1)
-  list_name=$(echo "$line" | cut -f2)
-    "$cmd"
-  c=$((c+1))
-  done < "$lists_tsv"
-}
-
 #this is the default sorting order. First by priority,
 #then by due date.
-_by_priority () {
+by_priority () {
   sort -k 4 "$tasks_tsv" > data/pri.tsv
 }
 #you can get it sorted by date if you prefer.
-_by_due_date () {
+by_due_date () {
   sort -k 6 "$tasks_tsv" > data/due.tsv
 }
+
+
 
 #this displays your tasks to stdout looking reasonably,
 #I think. I want to add colour.
