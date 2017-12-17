@@ -136,10 +136,10 @@ display () {
 
 _md () {
   case $priority in
-    1) echo "*!$priority* $name *$due_date* _#$list_name_" ;;
-    2) echo "*!$priority* $name *$due_date*  _#$list_name_" ;;
-    3) echo "*!$priority* $name *$due_date* _#$list_name_" ;;
-    N) echo "$name *$due_date* _#$list_name_" ;;
+    1) echo "*!$priority* $name *$due_date* _#$list_name\_" ;;
+    2) echo "*!$priority* $name *$due_date*  _#$list_name\_" ;;
+    3) echo "*!$priority* $name *$due_date* _#$list_name\_" ;;
+    N) echo "$name *$due_date* _#$list_name" ;;
   esac
 }
 
