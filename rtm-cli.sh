@@ -184,7 +184,7 @@ c=1
 
 #does the actions below. i should add a 'help' section.
 #Note that it syncs your tasks everytime you add or 
-#complete one. sdsdas
+#complete one. sdsdassdsdf
 for i in "$@"
 do
 case $i in
