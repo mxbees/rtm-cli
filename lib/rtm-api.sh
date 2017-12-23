@@ -111,11 +111,6 @@ tasks_getList () {
 
 add_tags () {
   method='rtm.tasks.addTags'
-  task="$1"
-  tags=$(echo "$hashtags" | cut -d' ' -f2 | sed 's/#//')
-  echo "$hashtags"
-  echo "$task"
-  echo "$tags"
   args="method=$method&$standard_args&timeline=$timeline&$task_args&tags=$tags"
   sig=$(get_sig "$args")
   response=$(wget -q -O - "$api_url?$args&api_sig=$sig")
@@ -124,24 +119,36 @@ add_tags () {
     return
   else
     echo "$response"
-  fi  
+  fi
 }
 
 tasks_add () {
   method="rtm.tasks.add"
   task="$1"
-  name=$(echo "$task" | sed 's/\ #.*$//g') #
-  hashtags=$(expr match "$task" '.*\(#.* #.*\)')
-  echo "${task#name}"
-  if [[ -z $hashtags ]]; then 
+  name=$(echo "$task" | sed 's/\ #.*$//g' | sed 's/\ \+.*$//g') #
+  tag=$(expr match "$task" '.*\(#[a-z].*\)' | sed 's/\#//g')
+  list=$(echo "$task" | sed 's/\ #.*$//g' | xargs -I{} expr match "{}" '.*+\([a-z].*\)')
+  echo "$task"
+  echo "$name"
+  echo "$tag"
+  echo "$list"
+  if [[ -z $list ]]; then 
     list_id=39537778
   else
-    list_id=$(echo "$hashtags" | cut -d' ' -f1 | sed 's/#//' | xargs -I{} grep "{}" $lists_tsv | cut -f1)
+    list_id=$(echo "$list" | xargs -I{} grep "{}" $lists_tsv | cut -f1)
   fi
   args="method=$method&$standard_args&timeline=$timeline&name=$name&parse=1&list_id=$list_id" 
   sig=$(get_sig "$args")
-  response=$(wget -q -O - "$api_url?$args&api_sig=$sig")
+  response=$(curl -s "$api_url?$args&api_sig=$sig" | "$json" ) #wget -q -O -
   status=$(echo "$response" | "$json"  | grep '"rsp","stat"' | cut -f2 ) #2> /dev/null
+  
+  tags=$(echo "$hashtags" | cut -d' ' -f2 | sed 's/#//')
+  if [[ ! -z "$tags" ]]; then
+    taskseries_id=$(echo "$response" | "$json" | grep 'taskseries","id' | cut -f2 | sed 's/"//g')
+    task_id=$(echo "$response" | "$json" | grep 'task","id' | cut -f2 | sed 's/"//g')
+    add_tags 
+  fi
+  
   if [ "$status" = '"ok"' ]; then
     echo "$response"
     return

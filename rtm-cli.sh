@@ -28,13 +28,12 @@ case $i in
     fi
   shift;;  
   add|a)
-    g=$(tasks_add "$2")
+    tasks_add "$2"
+    #t=$(mktemp)
+    #g=$(tasks_add "$2")
     if [[ $? = 0 ]];then
       echo "task added"
-      list_id=$(echo "$g" | "$json" | grep 'list","id' | cut -f2 | sed 's/"//g')
-      taskseries_id=$(echo "$g" | "$json" | grep 'taskseries","id' | cut -f2 | sed 's/"//g')
-      task_id=$(echo "$g" | "$json" | grep 'task","id' | cut -f2 | sed 's/"//g')
-      add_tags "$2"
+      #echo "$g"
       #sync_tasks #&
     else
       echo "$g"
