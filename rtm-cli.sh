@@ -203,7 +203,11 @@ case $i in
     g=$(tasks_add "$2")
     if [[ $? = 0 ]];then
       echo "task added"
-      sync_tasks &
+      list_id=$(echo "$g" | ./json.sh | grep 'list","id' | cut -f2 | sed 's/"//g')
+      taskseries_id=$(echo "$g" | ./json.sh | grep 'taskseries","id' | cut -f2 | sed 's/"//g')
+      task_id=$(echo "$g" | ./json.sh | grep 'task","id' | cut -f2 | sed 's/"//g')
+      add_tags "$2"
+      #sync_tasks #&
     else
       echo "$g"
     fi

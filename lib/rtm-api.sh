@@ -12,7 +12,7 @@ api_url="https://api.rememberthemilk.com/services/rest/"
 #get xml back. For json you'll need to install jq, because 
 #this script relies heavily on it.
 standard_args="api_key=$api_key&format=json&auth_token=$auth_token"
-
+task_args="list_id=$list_id&taskseries_id=$taskseries_id&task_id=$task_id"
 #sign requests, pretty much all api calls need to be signed
 #https://www.rememberthemilk.com/services/api/authentication.rtm
 get_sig ()
@@ -109,21 +109,38 @@ tasks_getList () {
  # date -Iseconds > $data_dir/last_sync.txt
 }
 
+add_tags () {
+  method='rtm.tasks.addTags'
+  task="$1"
+  tags=$(echo "$hashtags" | cut -d' ' -f2 | sed 's/#//')
+  echo "$task_args"
+  args="method=$method&$standard_args&timeline=$timeline&$task_args&tags=$tags"
+  sig=$(get_sig "$args")
+  response=$(wget -q -O - "$api_url?$args&api_sig=$sig")
+  status=$(echo "$response" | ./json.sh  | grep '"rsp","stat"' | cut -f2 )
+  if [ "$status" = '"ok"' ]; then
+    return
+  else
+    echo "$response"
+  fi  
+}
+
 tasks_add () {
   method="rtm.tasks.add"
   task="$1"
-  name=$(echo "$task" | sed 's/\ #.*$//g')
-  u=$(expr match "$task" '.*#\([a-z]*\)')
-  if [[ -z $u ]]; then 
-    l_id=39537778
+  name=$(echo "$task" | sed 's/\ #.*$//g') #
+  hashtags=$(expr match "$task" '.*\(#.* #.*\)')
+  if [[ -z $hashtags ]]; then 
+    list_id=39537778
   else
-    l_id=$(grep "$u" $lists_tsv | cut -f1)
+    list_id=$(echo "$hashtags" | cut -d' ' -f1 | sed 's/#//' | xargs -I{} grep "{}" $lists_tsv | cut -f1)
   fi
-  args="method=$method&$standard_args&timeline=$timeline&name=$name&parse=1&list_id=$l_id" 
+  args="method=$method&$standard_args&timeline=$timeline&name=$name&parse=1&list_id=$list_id" 
   sig=$(get_sig "$args")
   response=$(wget -q -O - "$api_url?$args&api_sig=$sig")
-  m=$(echo "$response" | ./json.sh 2> /dev/null | grep '"rsp","stat"' | cut -f2 )
-  if [ "$m" = '"ok"' ]; then
+  status=$(echo "$response" | ./json.sh  | grep '"rsp","stat"' | cut -f2 ) #2> /dev/null
+  if [ "$status" = '"ok"' ]; then
+    echo "$response"
     return
   else
     echo "$response"
@@ -156,7 +173,7 @@ tasks_delete () {
   l_id=$(echo "$task" | cut -f2)
   ts_id=$(echo "$task" | cut -f3)
   t_id=$(echo "$task" | cut -f4)
-  args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id"
+  args="method=$method&$standard_args&timeline=$timeline&$task_args"
   sig=$(get_sig "$args")
   response=$(curl -s "$api_url?$args&api_sig=$sig")
   check $response
