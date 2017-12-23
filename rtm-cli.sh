@@ -28,13 +28,10 @@ case $i in
     fi
   shift;;  
   add|a)
-    tasks_add "$2"
-    #t=$(mktemp)
-    #g=$(tasks_add "$2")
+    g=$(tasks_add "$2")
     if [[ $? = 0 ]];then
       echo "task added"
-      #echo "$g"
-      #sync_tasks #&
+      sync_tasks &
     else
       echo "$g"
     fi
