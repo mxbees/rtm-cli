@@ -1,10 +1,10 @@
 #!/bin/bash
-
+json='./json.sh'
 _lists () {
   tmp1=$(mktemp)
   tmp2=$(mktemp)
   tmp3=$(mktemp)
-  ./json.sh < "$lists_json" | tail -n +2 > "$tmp1"
+  "$json" < "$lists_json" | tail -n +2 > "$tmp1"
   list_id=$(grep -e  '"rsp","lists","list",[0-9],"id"' "$tmp1" | cut -f2 | sed 's/"//g' > "$tmp2") 
   list_name=$(grep -e '"rsp","lists","list",[0-9],"name"' "$tmp1" | cut -f2 | sed 's/"//g' > "$tmp3")
   paste "$tmp2" "$tmp3" > "$lists_tsv"
@@ -26,7 +26,7 @@ tasks2tsv () {
     echo "$1" 
   }
   all_tasks=$(mktemp)
-  ./json.sh < "$tasks_json" | tail -n +2 > "$all_tasks"
+  "$json" < "$tasks_json" | tail -n +2 > "$all_tasks"
   list_id=$(grep -E '"taskseries","id"|"taskseries",[0-9],"id"' "$all_tasks" | cut -f1 | cut -d',' -f4 > "${tmp[a]}")
   task_series_id=$(grep -E '"taskseries","id"|"taskseries",[0-9][0-9]?,"id"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[b]}")
   task_id=$(grep -e '"task",[0-9],"id"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[c]}")

@@ -5,7 +5,7 @@
 #api_secret="your secret here"
 #You'll need this for all of the script.
 . ~/.rtmcfg
-
+json='./json.sh'
 api_url="https://api.rememberthemilk.com/services/rest/"
 #I find json easier to work with, but you can remove it
 #from here and in the $standard_args variable and you'll 
@@ -23,7 +23,7 @@ get_sig ()
 
 check () {
   rsp="$1"
-  m=$(echo "$rsp" | ./json.sh 2> /dev/null | grep '"rsp","stat"' | cut -f2 )
+  m=$(echo "$rsp" | "$json" 2> /dev/null | grep '"rsp","stat"' | cut -f2 )
   if [ "$m" != '"ok"' ]; then
     echo "$response"
   else
@@ -75,7 +75,7 @@ check_token () {
   method="rtm.auth.checkToken"
   args="method=$method&$standard_args"
   sig=$(get_sig "$args")
-  check=$(curl -s "$api_url?$args&api_sig=$sig" | ./json.sh -b | head -n 1 | cut -f2 | sed 's/"//g')
+  check=$(curl -s "$api_url?$args&api_sig=$sig" | "$json" -b | head -n 1 | cut -f2 | sed 's/"//g')
   echo "$check"
 }
 #Grabs the timeline. Need for all write requests.
@@ -84,7 +84,7 @@ get_timeline () {
   method="rtm.timelines.create"
   args="method=$method&$standard_args"
   sig=$(get_sig "$args")
-  timeline=$(curl -s "$api_url?$args&api_sig=$sig" | ./json.sh -b | tail -n1 | cut -f2 | sed 's/"//g')
+  timeline=$(curl -s "$api_url?$args&api_sig=$sig" | "$json" -b | tail -n1 | cut -f2 | sed 's/"//g')
   echo "$timeline"
 }
 
@@ -113,11 +113,13 @@ add_tags () {
   method='rtm.tasks.addTags'
   task="$1"
   tags=$(echo "$hashtags" | cut -d' ' -f2 | sed 's/#//')
-  echo "$task_args"
+  echo "$hashtags"
+  echo "$task"
+  echo "$tags"
   args="method=$method&$standard_args&timeline=$timeline&$task_args&tags=$tags"
   sig=$(get_sig "$args")
   response=$(wget -q -O - "$api_url?$args&api_sig=$sig")
-  status=$(echo "$response" | ./json.sh  | grep '"rsp","stat"' | cut -f2 )
+  status=$(echo "$response" | "$json"  | grep '"rsp","stat"' | cut -f2 )
   if [ "$status" = '"ok"' ]; then
     return
   else
@@ -130,6 +132,7 @@ tasks_add () {
   task="$1"
   name=$(echo "$task" | sed 's/\ #.*$//g') #
   hashtags=$(expr match "$task" '.*\(#.* #.*\)')
+  echo "${task#name}"
   if [[ -z $hashtags ]]; then 
     list_id=39537778
   else
@@ -138,7 +141,7 @@ tasks_add () {
   args="method=$method&$standard_args&timeline=$timeline&name=$name&parse=1&list_id=$list_id" 
   sig=$(get_sig "$args")
   response=$(wget -q -O - "$api_url?$args&api_sig=$sig")
-  status=$(echo "$response" | ./json.sh  | grep '"rsp","stat"' | cut -f2 ) #2> /dev/null
+  status=$(echo "$response" | "$json"  | grep '"rsp","stat"' | cut -f2 ) #2> /dev/null
   if [ "$status" = '"ok"' ]; then
     echo "$response"
     return
@@ -159,7 +162,7 @@ tasks_complete () {
   args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id"
   sig=$(get_sig "$args")
   response=$(curl -s "$api_url?$args&api_sig=$sig")
-  m=$(echo "$response" | ./json.sh 2> /dev/null | grep '"rsp","stat"' | cut -f2 )
+  m=$(echo "$response" | "$json" 2> /dev/null | grep '"rsp","stat"' | cut -f2 )
   if [ "$m" = '"ok"' ]; then
     return
   else
