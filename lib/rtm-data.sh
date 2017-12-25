@@ -149,23 +149,31 @@ _pretty () {
 bold=$(tput bold)
 normal=$(tput sgr0)
 red=$(tput setaf 1)
-green=$(tput setaf 2)
-orange=$(tput setaf 3)
+green=$(tput setaf 10)
+orange=$(tput setaf 208)
 pink=$(tput setaf 5)
-blue=$(tput setaf 6)
+blue=$(tput setaf 45)
 white=$(tput setaf 7)
+yellow=$(tput setaf 11)
 default=$(tput setaf 9)
+purple=$(tput setaf 99)
+bright_green=$(tput setaf 10)
+amber=$(tput setaf 220)
 c=1
   p="${red}${bold}$priority${default}${normal}"
-  t="${green}$name${default}"
+  p1="${red}${bold}$name${default}${normal}"
+  p2="${orange}$name${default}"
+  p3="${yellow}$name${default}"
+  n="${amber}$name${default}"
   d="${blue}${bold}$due_date${default}${normal}"
-  l="${orange}#$list_name${default}"
+  l="${purple}$list_name${default}"
+  h="${bright_green}#${default}"
   i="${pink}$index${default}"
   case $priority in
-    1) echo "$i: $t $d $p $l" ;;
-    2) echo "$i: $t $d $p $l" ;;
-    3) echo "$i: $t $d $p $l" ;;
-    N) echo "$i: $t $d $p $l" ;;
+    1) echo "$i: $p1 $d $h$l" ;;
+    2) echo "$i: $p2 $d $h$l" ;;
+    3) echo "$i: $p3 $d $h$l" ;;
+    N) echo "$i: $n $d $h$l" ;;
   esac
 }
 
