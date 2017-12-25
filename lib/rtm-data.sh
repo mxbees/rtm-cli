@@ -37,7 +37,7 @@ tasks2tsv () {
   created=$(grep -E 'taskseries","created"|"taskseries",[0-9],"created"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[g]}")
   modified=$(grep -E '"taskseries","modified"|"taskseries",[0-9],"modified"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[h]}")
   paste "${tmp[@]}" > "${tmp[j]}" 
-  sed -i '/39537783/d' "$lists_tsv"
+  #sed -i '/39537783/d' "$lists_tsv"
   mapfile -t list < <(grep -e '"rsp","tasks","list",[0-9],"id"' "$all_tasks" | cut -f2 | sed 's/"//g')
   while read line; do
     l_index=$(echo "$line" | cut -f1)

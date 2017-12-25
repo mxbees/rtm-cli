@@ -101,6 +101,7 @@ lists_getList () {
 tasks_getList () {
   method="rtm.tasks.getList"
   list_id=$1
+  args="method=$method&$standard_args&filter=status:incomplete&list_id=$list_id"
   sig=$(get_sig "$args")
   curl -s "$api_url?$args&api_sig=$sig" > "$tasks_json" 
 }
