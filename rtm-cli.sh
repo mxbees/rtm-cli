@@ -1,14 +1,11 @@
 #!/bin/bash
-  . lib/rtm-api.sh &> /dev/null
-  . lib/rtm-data.sh &> /dev/null
-  . $PWD/lib/rtm/lib/rtm-api.sh &> /dev/null
-  . $PWD/lib/rtm/lib/rtm-data.sh &> /dev/null
-json='./json.sh'
-lists_json='data/lists.json'
-tasks_json='data/tasks.json'
-lists_tsv='data/lists.tsv'
-tasks_tsv='data/tasks.tsv'
-#rtm_lists=$(mktemp)
+. $HOME/.rtmcfg
+. $HOME/bin/rtm-cli/lib/rtm-api.sh &> /dev/null
+. $HOME/bin/rtm-cli/lib/rtm-data.sh &> /dev/null
+lists_json="$data/lists.json"
+tasks_json="$data/tasks.json"
+lists_tsv="$data/lists.tsv"
+tasks_tsv="$data/tasks.tsv"
 
 #does the actions below. i should add a 'help' section.
 #Note that it syncs your tasks everytime you add or 
@@ -18,11 +15,11 @@ do
 case $i in
   list|ls)
     if [[ "$2" = '-d' ]]; then
-      display 'data/due.tsv' _pretty
+      display "$data/due.tsv" _pretty
     elif [[ "$2" = '-p' ]]; then
-      display 'data/pri.tsv' _pretty
+      display "$data/pri.tsv" _pretty
     elif [[ "$2" = "-l" ]]; then
-      display 'data/list-sort.tsv' _pretty
+      display "$data/list-sort.tsv" _pretty
     else
       display "$tasks_tsv" _pretty
     fi
@@ -77,11 +74,11 @@ case $i in
   ;;
   bls)
   if [[ "$2" = '-d' ]]; then
-    display 'data/due.tsv' _md
+    display "$data/due.tsv" _md
   elif [[ "$2" = '-p' ]]; then
-    display 'data/pri.tsv' _md
+    display "$data/pri.tsv" _md
   elif [[ "$2" = "-l" ]]; then
-    display 'data/list-sort.tsv' _md
+    display "$data/list-sort.tsv" _md
   else
     display "$tasks_tsv" _md
   fi

@@ -1,5 +1,6 @@
 #!/bin/bash
-json='./json.sh'
+. $HOME/.rtmcfg
+
 _lists () {
   tmp1=$(mktemp)
   tmp2=$(mktemp)
@@ -41,7 +42,7 @@ tasks2tsv () {
   while read line; do
     l_index=$(echo "$line" | cut -f1)
     sub=$(echo "${list[$l_index]}")
-    echo "$line" | sed "0,/$l_index/s//${list[$l_index]}/" >> "${tmp[k]}" #data/${list[$l_index]}.tsv
+    echo "$line" | sed "0,/$l_index/s//${list[$l_index]}/" >> "${tmp[k]}" 
   done < "${tmp[j]}"
   sort -k 5 -k 7 ${tmp[k]} > "$tasks_tsv"
   rm -- "${tmp[@]}"
@@ -54,7 +55,6 @@ list_loop () {
   for l in ${list[@]};do
     echo $l
     tasks_getList "$l"
-    #tasks2tsv data/$l.json
   done
 }
 
@@ -82,7 +82,7 @@ priority_filter () {
       echo -e "$a" >> "$ptmp"
     fi
   done < "$tasks_tsv"
-  sort -k 5 "$ptmp" > data/pri.tsv
+  sort -k 5 "$ptmp" > "$data/pri.tsv"
 }
 #you can get it sorted by date if you prefer.
 due_date_filter () {
@@ -96,11 +96,11 @@ due_date_filter () {
       echo -e "$h" >> "$dtmp"
     fi
   done < "$tasks_tsv"
-  sort -k 7 "$dtmp" > data/due.tsv
+  sort -k 7 "$dtmp" > "$data/due.tsv"
 }
 
 by_list () {
-  sort -f -k 2 "$tasks_tsv" > data/list-sort.tsv
+  sort -f -k 2 "$tasks_tsv" > "$data/list-sort.tsv"
 }
 
 sync_tasks () {

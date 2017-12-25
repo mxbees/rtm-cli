@@ -4,8 +4,7 @@
 #api_key="your key here"
 #api_secret="your secret here"
 #You'll need this for all of the script.
-. ~/.rtmcfg
-json='./json.sh'
+. $HOME/.rtmcfg
 api_url="https://api.rememberthemilk.com/services/rest/"
 #I find json easier to work with, but you can remove it
 #from here and in the $standard_args variable and you'll 
@@ -101,16 +100,13 @@ lists_getList () {
 #https://www.rememberthemilk.com/services/api/methods/rtm.tasks.getList.rtm
 tasks_getList () {
   method="rtm.tasks.getList"
- # last_sync=$(cat $data_dir/last_sync.txt)
   list_id=$1
-  args="method=$method&$standard_args&filter=status:incomplete&list_id=$list_id" #&last_sync=$last_sync
   sig=$(get_sig "$args")
-  curl -s "$api_url?$args&api_sig=$sig" > "$tasks_json" #data/$list_id.json
- # date -Iseconds > $data_dir/last_sync.txt
+  curl -s "$api_url?$args&api_sig=$sig" > "$tasks_json" 
 }
 
 add_tags () {
-    if [[ ! -z "$tag" ]]; then
+  if [[ ! -z "$tag" ]]; then
     taskseries_id=$(echo "$response" | "$json" | grep 'taskseries","id' | cut -f2 | sed 's/"//g')
     task_id=$(echo "$response" | "$json" | grep 'task","id' | cut -f2 | sed 's/"//g')
     add_tags "$list_id" "$taskseries_id" "$task_id" "$tag"
