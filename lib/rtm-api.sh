@@ -154,39 +154,26 @@ tasks_add () {
     return
   else
     echo "$response"
+    return 1
   fi
 }
 
-#This will mark a task as complete. And this action can
-#be undone if you need.
-#https://www.rememberthemilk.com/services/api/methods/rtm.tasks.complete.rtm
-tasks_complete () {
-  method="rtm.tasks.complete"
+tasks_ () {
+  method="rtm.tasks.$2"
   task=$(sed "${1}q;d" $tasks_tsv)
-  l_id=$(echo "$task" | cut -f2)
-  ts_id=$(echo "$task" | cut -f3)
-  t_id=$(echo "$task" | cut -f4)
-  args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id"
+  list_id=$(echo "$task" | cut -f2)
+  taskseries_id=$(echo "$task" | cut -f3)
+  task_id=$(echo "$task" | cut -f4)
+  args="method=$method&$standard_args&timeline=$timeline&list_id=$list_id&taskseries_id=$taskseries_id&task_id=$task_id"
   sig=$(get_sig "$args")
   response=$(curl -s "$api_url?$args&api_sig=$sig")
-  m=$(echo "$response" | "$json" 2> /dev/null | grep '"rsp","stat"' | cut -f2 )
-  if [ "$m" = '"ok"' ]; then
+  r=$(echo "$response" | "$json" 2> /dev/null | grep '"rsp","stat"' | cut -f2 )
+  if [ "$r" = '"ok"' ]; then
     return
   else
     echo "$response"
+    return 1
   fi
-}
-
-tasks_delete () {
-  method="rtm.tasks.delete"
-  task=$(sed "${1}q;d" $tasks_tsv)
-  l_id=$(echo "$task" | cut -f2)
-  ts_id=$(echo "$task" | cut -f3)
-  t_id=$(echo "$task" | cut -f4)
-  args="method=$method&$standard_args&timeline=$timeline&$task_args"
-  sig=$(get_sig "$args")
-  response=$(curl -s "$api_url?$args&api_sig=$sig")
-  check $response
 }
 #Add a task. For the sake of... simplicity, its usually
 #best to always add to a specific list. Something wonky
@@ -203,16 +190,3 @@ tasks_setPriority () {
   response=$(curl -s "$api_url?$bargs&api_sig=$sig")
   check $response
 }
-
-tasks_postpone () {
-  method="rtm.tasks.postpone"
-  x=$(grep "item\[$1\]" /tmp/indexed_tasks.csv | sed "s/item\[$1\]=//g" )
-  l_id=$(echo "$x" | cut -d',' -f5 | xargs -0 -I{} grep {} /tmp/list-vars.txt | cut -d'=' -f2)
-  ts_id=$(echo "$x" | cut -d',' -f3)
-  t_id=$(echo "$x" | cut -d',' -f4)
-  args="method=$method&$standard_args&timeline=$timeline&list_id=$l_id&taskseries_id=$ts_id&task_id=$t_id"
-  sig=$(get_sig "$args")
-  check=$(curl -s "$api_url?$args&api_sig=$sig" | jq -r '.rsp | .stat')
-  check $check
-}
-

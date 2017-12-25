@@ -32,56 +32,49 @@ case $i in
     else
       echo "$g"
     fi
-  shift
-  ;;
+  shift;;
   com|c)
-    q=$(tasks_complete "$2")
+    q=$(tasks_ "$2" 'complete')
     if [[ $? = 0 ]];then
-      sed -i "${2}d" $tasks_tsv
+      #sed -i "${2}d" $tasks_tsv
       echo "task $2 completed :D"
+      sync_tasks &
     else
       echo "$q"
     fi
-  shift
-  ;;
-  test)
-    list_loop
+  shift;;
+  del|d)
+    q=$(tasks_ "$2" 'delete')
+    if [[ $? = 0 ]];then
+      #sed -i "${2}d" $tasks_tsv
+      echo "task $2 deleted"
+      sync_tasks &
+    else
+      echo "$q"
+    fi
   shift;;
   postpone|p)
-    tasks_postpone $2
-    sync_tasks
-    sort_priority
-    display_tasks /tmp/by-priority.csv
-  shift
-  ;;
+    q=$(tasks_ "$2" 'postpone')
+    if [[ $? = 0 ]];then
+      #sed -i "${2}d" $tasks_tsv
+      echo "task $2 postponed"
+      sync_tasks &
+    else
+      echo "$q"
+    fi
+  shift;;
   sync)
     sync_tasks
-  shift
-  ;;
+  shift;;
   authorize)
     authenticate
     . ~/.rtmcfg
-  shift
-  ;;
-  del|d)
-    tasks_delete "$2"
-    sync_tasks
-  shift
-  ;;
+  shift;;
   check)
     check_token
-  shift
-  ;;
-  bls)
-  if [[ "$2" = '-d' ]]; then
-    display "$data/due.tsv" _md
-  elif [[ "$2" = '-p' ]]; then
-    display "$data/pri.tsv" _md
-  elif [[ "$2" = "-l" ]]; then
-    display "$data/list-sort.tsv" _md
-  else
-    display "$tasks_tsv" _md
-  fi
+  shift;;
+  test)
+    list_loop
   shift;;
 esac
 done
