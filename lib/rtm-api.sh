@@ -100,7 +100,7 @@ lists_getList () {
 #https://www.rememberthemilk.com/services/api/methods/rtm.tasks.getList.rtm
 tasks_getList () {
   method="rtm.tasks.getList"
-  list_id=$1
+  list_id=39537778 #$1
   args="method=$method&$standard_args&filter=status:incomplete&list_id=$list_id"
   sig=$(get_sig "$args")
   curl -s "$api_url?$args&api_sig=$sig" > "$tasks_json" 
@@ -131,30 +131,53 @@ add_tags () {
   fi
 }
 
+#tasks_add () {
+#  method="rtm.tasks.add"
+#  task="$1"
+#  name=$(echo "$task" | sed 's/\ #.*$//g' | sed 's/\ \+.*$//g') #
+#  list=$(echo "$task" | sed 's/\ #.*$//g' | xargs -I{} expr match "{}" '.*+\([a-z].*\)')
+#  
+#  if [[ -z "$list" ]]; then 
+#    list_id=39537778
+#  else
+#    list_id=$(echo "$list" | xargs -I{} grep "{}" $lists_tsv | cut -f1)
+#  fi
+#  
+#  args="method=$method&$standard_args&timeline=$timeline&name=$name&parse=1&list_id=$list_id" 
+#  sig=$(get_sig "$args")
+#  response=$(curl -s "$api_url?$args&api_sig=$sig")
+#  status=$(echo "$response" | "$json"  | grep '"rsp","stat"' | cut -f2 ) #2> /dev/null
+#  tag=$(expr match "$task" '.*\(#[a-z].*\)' | sed 's/\#//g')
+
+#  if [ "$status" = '"ok"' ]; then
+#    echo "$response"
+#    return
+#  else
+#    echo "$response"
+#    return 1
+#  fi
+#}
+
 tasks_add () {
   method="rtm.tasks.add"
   task="$1"
-  name=$(echo "$task" | sed 's/\ #.*$//g' | sed 's/\ \+.*$//g') #
-  list=$(echo "$task" | sed 's/\ #.*$//g' | xargs -I{} expr match "{}" '.*+\([a-z].*\)')
-  
-  if [[ -z "$list" ]]; then 
+  name=$(echo "$task" | sed 's/\ #.*$//g') #
+  hashtags=$(expr match "$task" '.*#\([a-z].*\)')
+  if [[ -z "$hashtags" ]]; then 
     list_id=39537778
   else
-    list_id=$(echo "$list" | xargs -I{} grep "{}" $lists_tsv | cut -f1)
+    list_id=$(echo "$hashtags" | xargs -I{} grep "{}" $lists_tsv | cut -f1)
   fi
-  
   args="method=$method&$standard_args&timeline=$timeline&name=$name&parse=1&list_id=$list_id" 
   sig=$(get_sig "$args")
-  response=$(curl -s "$api_url?$args&api_sig=$sig")
-  status=$(echo "$response" | "$json"  | grep '"rsp","stat"' | cut -f2 ) #2> /dev/null
-  tag=$(expr match "$task" '.*\(#[a-z].*\)' | sed 's/\#//g')
-
-  if [ "$status" = '"ok"' ]; then
-    echo "$response"
-    return
+  response=$(wget -q -O - "$api_url?$args&api_sig=$sig")
+  m=$(echo "$response" | ./bin/json.sh 2> /dev/null | grep '"rsp","stat"' | cut -f2 )
+  if [ "$m" = '"ok"' ]; then
+    echo "task added"
+    sync_tasks &
+    return 
   else
     echo "$response"
-    return 1
   fi
 }
 
@@ -190,3 +213,5 @@ tasks_setPriority () {
   response=$(curl -s "$api_url?$bargs&api_sig=$sig")
   check $response
 }
+
+tasks_getList

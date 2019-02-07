@@ -28,14 +28,14 @@ tasks2tsv () {
   }
   all_tasks=$(mktemp)
   "$json" < "$tasks_json" | tail -n +2 > "$all_tasks"
-  list_id=$(grep -E '"taskseries","id"|"taskseries",[0-9],"id"' "$all_tasks" | cut -f1 | cut -d',' -f4 > "${tmp[a]}")
-  task_series_id=$(grep -E '"taskseries","id"|"taskseries",[0-9][0-9]?,"id"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[b]}")
+  list_id=$(grep -E '"taskseries","id"|"taskseries",[0-9]{1,},"id"' "$all_tasks" | cut -f1 | cut -d',' -f4 > "${tmp[a]}")
+  task_series_id=$(grep -E '"taskseries","id"|"taskseries",[0-9]{1,},"id"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[b]}")
   task_id=$(grep -e '"task",[0-9],"id"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[c]}")
   priority=$(grep -e '"task",[0-9],"priority"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[d]}")
-  name=$(grep -E '"taskseries","name"|"taskseries",[0-9],"name"' "$all_tasks" | cut -f2 > "${tmp[e]}")
+  name=$(grep -E '"taskseries","name"|"taskseries",[0-9]{1,},"name"' "$all_tasks" | cut -f2 > "${tmp[e]}")
   due=$(grep -e '"task",[0-9],"due"' "$all_tasks" | cut -f2 | sed 's/""/null/g' | sed 's/"//g' > "${tmp[f]}")
-  created=$(grep -E 'taskseries","created"|"taskseries",[0-9],"created"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[g]}")
-  modified=$(grep -E '"taskseries","modified"|"taskseries",[0-9],"modified"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[h]}")
+  created=$(grep -E 'taskseries","created"|"taskseries",[0-9]{1,},"created"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[g]}")
+  modified=$(grep -E '"taskseries","modified"|"taskseries",[0-9]{1,},"modified"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[h]}")
   paste "${tmp[@]}" > "${tmp[j]}" 
   sed -i '/39537783/d' "$lists_tsv"
   mapfile -t list < <(grep -e '"rsp","tasks","list",[0-9],"id"' "$all_tasks" | cut -f2 | sed 's/"//g')
@@ -155,7 +155,7 @@ pink=$(tput setaf 5)
 blue=$(tput setaf 45)
 white=$(tput setaf 7)
 yellow=$(tput setaf 11)
-default=$(tput setaf 9)
+default=$(tput setaf 220)
 purple=$(tput setaf 99)
 bright_green=$(tput setaf 10)
 amber=$(tput setaf 220)
