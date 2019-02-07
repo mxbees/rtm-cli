@@ -16,7 +16,7 @@ tasks2tsv () {
   > "$tasks_tsv"
   
   declare -A tmp
-  t=(a b c d e f g h i j k)
+  t=(a b c d e f g h i j k l)
 
   for tm in "${t[@]}"; do
     tmp[$tm]=$(mktemp)
@@ -33,6 +33,7 @@ tasks2tsv () {
   task_id=$(grep -e '"task",[0-9],"id"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[c]}")
   priority=$(grep -e '"task",[0-9],"priority"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[d]}")
   name=$(grep -E '"taskseries","name"|"taskseries",[0-9]{1,},"name"' "$all_tasks" | cut -f2 > "${tmp[e]}")
+  tag=$(grep -e '"tags","tag",0' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[l]}")
   due=$(grep -e '"task",[0-9],"due"' "$all_tasks" | cut -f2 | sed 's/""/null/g' | sed 's/"//g' > "${tmp[f]}")
   created=$(grep -E 'taskseries","created"|"taskseries",[0-9]{1,},"created"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[g]}")
   modified=$(grep -E '"taskseries","modified"|"taskseries",[0-9]{1,},"modified"' "$all_tasks" | cut -f2 | sed 's/"//g' > "${tmp[h]}")
@@ -118,7 +119,7 @@ display () {
   fmt=$2
   OLDIFS=$IFS
   IFS=$'\t'
-  while read -r index task_list task_series_id task_id priority name due created modified; do
+  while read -r index task_list task_series_id task_id priority name due created modified tags; do
     r='[0-9]{4}-[0-9]{2}-[0-9]{2}T05:00:00Z'
     list_name=$(grep "$task_list" "$lists_tsv" | cut -f2)
     if [[ "$due" =~ $r ]]; then
@@ -166,14 +167,14 @@ c=1
   p3="${yellow}$name${default}"
   n="${amber}$name${default}"
   d="${blue}${bold}$due_date${default}${normal}"
-  l="${purple}$list_name${default}"
+  l="${purple}$tags${default}"
   h="${bright_green}#${default}"
-  i="${pink}$index${default}"
+  i="${pink}$(printf '%02d' $index)${default}"
   case $priority in
-    1) echo "$i: $p1 $d $h$l" ;;
-    2) echo "$i: $p2 $d $h$l" ;;
-    3) echo "$i: $p3 $d $h$l" ;;
-    N) echo "$i: $n $d $h$l" ;;
+    1) echo -e "$i: $p1 $d $h$l" ;;
+    2) echo -e "$i: $p2 $d $h$l" ;;
+    3) echo -e "$i: $p3 $d $h$l" ;;
+    N) echo -e "$i: $n $d $h$l" ;;
   esac
 }
 
